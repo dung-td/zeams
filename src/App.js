@@ -1,25 +1,36 @@
-import logo from './logo.svg';
-import './App.css';
+import { useRef } from "react"
+import "./App.css"
 
 function App() {
+  const video = useRef()
+  var constraints = {
+    audio: true,
+    video: {
+      mandatory: {
+        width: { min: 320 },
+        height: { min: 180 },
+      },
+    },
+  }
+
+  navigator.getUserMedia(constraints, gotStream, logError)
+
+  function gotStream(stream) {
+    video.current = stream
+    video.current.play()
+  }
+
+  function logError(error) {
+    console.log(error)
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <p>Hello</p>
+
+      <video ref={video} autoPlay></video>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
