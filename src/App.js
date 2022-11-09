@@ -131,9 +131,8 @@ function App() {
     await createPeerConnection()
     await pc.setRemoteDescription(offer)
 
-    const answer = await pc.createAnswer()
-    signaling.postMessage({ type: "answer", sdp: answer.sdp })
-    await pc.setLocalDescription(answer)
+  function gotStream(stream) {
+    video.current = stream
   }
 
   async function handleAnswer(answer) {
@@ -175,16 +174,18 @@ function App() {
         </div>
 
         <div>
-          <p className="text-white">Local</p>
-          <video ref={localStreamRef} autoPlay></video>
-          {/* <div className="bg-[#242736]/75 absolute bottom-10 right-10 flex justify-center items-center p-2 rounded-xl hover:cursor-pointer">
-            <span className="material-icons text-white">mic</span>
-          </div> */}
+          <img
+            className="rounded-xl"
+            src={require("./img/image1.jpg")}
+            alt="meeting"
+          ></img>
+          <div className="bg-[#242736]/75 absolute bottom-10 right-10 flex justify-center items-center p-2 rounded-xl hover:cursor-pointer">
+            <span class="material-icons text-white">mic</span>
+          </div>
         </div>
-        <p className="text-white">Remote</p>
-        <video ref={remoteStreamRef} autoPlay></video>
       </div>
-      <div className="flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md">
+      {/* Participant */}
+      <div className="hidden flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md">
         <div className="w-full">
           <p className="font-bold text-xl">Participant</p>
           <div className=" mt-4">
@@ -202,8 +203,10 @@ function App() {
               <p> Tống Đức Dũng</p>
             </div>
             <div className="flex flex-row mt-4 items-center gap-1">
-              <span className="material-icons ">mic_off</span>
-              <span className="material-icons ">videocam_off</span>
+              <span class="material-icons hover:cursor-pointer">mic_off</span>
+              <span class="material-icons hover:cursor-pointer">
+                videocam_off
+              </span>
             </div>
           </div>
           <div className="flex flex-row mt-4 items-center justify-between">
@@ -212,12 +215,61 @@ function App() {
               <p> Tống Đức Dũng</p>
             </div>
             <div className="flex flex-row mt-4 items-center gap-1">
-              <span className="material-icons ">mic_off</span>
-              <span className="material-icons ">videocam_off</span>
+              <span class="material-icons hover:cursor-pointer">mic_off</span>
+              <span class="material-icons hover:cursor-pointer">
+                videocam_off
+              </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Chat */}
+      <div className="">
+        <div className="flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md h-5/6">
+          <div className="w-full">
+            <p className="font-bold text-xl">Chat</p>
+            <div className="my-4">
+              <input
+                type="text"
+                id="first_name"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                placeholder="Search for people"
+                required
+              />
+            </div>
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <div className="flex flex-row mt-4 items-center">
+                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                  <p className="font-bold"> Tống Đức Dũng</p>
+                  <div className="ml-4 flex flex-row items-center">
+                    <p>9:00 PM</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <p> Xin chào mọi người!</p>
+              </div>
+            </div>
+            <div>
+              <div className="flex flex-row items-center justify-between">
+                <div className="flex flex-row mt-4 items-center">
+                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                  <p className="font-bold"> MCD</p>
+                  <div className="ml-4 flex flex-row items-center">
+                    <p>9:00 PM</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4">
+                <p> Hi chào bạn!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-row m-4 gap-4 absolute bottom-0 justify-center w-3/4">
         <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
           <span className="material-icons text-white">mic</span>
