@@ -42,6 +42,7 @@ function Meeting() {
   const { roomRef } = useParams()
   const dispatch = useDispatch()
   const localStreamRef = useRef()
+  const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = "" //useSelector(selectUserId)
   const [others, setOthers] = useState([])
@@ -50,6 +51,10 @@ function Meeting() {
   const [isSharing, setIsSharing] = useState(false)
   const localStream = useSelector(selectLocalStream)
   const [initialising, setInitialising] = useState(true)
+
+  if (action === "create") {
+    userId = "testing1"
+  } else userId = "testing2"
 
   const deepClonePeers = () => {
     dispatch(
@@ -192,10 +197,6 @@ function Meeting() {
   }
 
   const connectServer = () => {
-    console.log(userId)
-    console.log(roomId)
-    console.log(roomRef)
-
     sendToServer({
       type: "join",
       roomId: roomId,
@@ -208,6 +209,7 @@ function Meeting() {
 
     connection.on("message", async (msg) => {
       const obj = JSON.parse(msg)
+      console.log(msg)
       switch (obj?.type) {
         case "id":
           break
@@ -344,6 +346,7 @@ function Meeting() {
   }
 
   const createPeerConnection = (index) => {
+    console.log("Index peer: " + index)
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
 
@@ -384,7 +387,7 @@ function Meeting() {
         (event) => {
           let remoteStream = new MediaStream()
           console.log("In Track")
-          if (event.streams[0] != undefined) {
+          if (event.streams[0] !== undefined) {
             console.log("streams[0]")
             event.streams[0].getTracks().forEach((track) => {
               remoteStream.addTrack(track)
@@ -392,10 +395,8 @@ function Meeting() {
           } else {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
-            otherPeers.current[index].remoteStream = new MediaStream([
-              event.track,
-            ])
           }
+          remoteStreamRef.current.srcObject = remoteStream
           otherPeers.current[index].remoteStream = remoteStream
           deepClonePeers()
         }
@@ -464,10 +465,6 @@ function Meeting() {
   useEffect(() => {
     preLoadLocalStream()
 
-    if (action === "create") {
-      userId = "testing1"
-    } else userId = "testing2"
-
     connectServer()
 
     return () => {
@@ -494,6 +491,12 @@ function Meeting() {
       <div className="w-2/4 h-3/4 p-8 justify-center relative">
         <div>
           <video ref={localStreamRef} autoPlay></video>
+
+          {otherPeers.current.length > 0 && (
+            <div>
+              <video ref={remoteStreamRef} autoPlay></video>
+            </div>
+          )}
         </div>
       </div>
 
