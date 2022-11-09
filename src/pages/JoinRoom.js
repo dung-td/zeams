@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import { useSelector } from "react-redux"
-import { Routes, Route, useParams } from "react-router-dom"
+import { Routes, Route, useParams, useNavigate } from "react-router-dom"
 
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
 
@@ -13,10 +13,11 @@ const mediaConstraints = {
 }
 
 function JoinRoom() {
+  const navigate = useNavigate()
   const localStreamRef = useRef()
   const { roomId } = useParams()
   const { roomRef } = useParams()
-  const userId = "testing2" //useSelector(selectUserId)
+  const userId = "testing2" //useSelector(selectUserId)p)
 
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
@@ -24,7 +25,8 @@ function JoinRoom() {
       console.log("Clean up local media stream in ready screen!")
     }
 
-    window.location.href = `/${roomId}/in/${roomRef}`
+    // window.location.href = `/${roomId}/in/${roomRef}`
+    navigate(`/${roomId}/in/${roomRef}`)
   }
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import { useSelector } from "react-redux"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useNavigate } from "react-router-dom"
 
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
 import { generateRoomId } from "../utils"
@@ -14,13 +14,15 @@ const mediaConstraints = {
 }
 
 function CreatRoom() {
+  const navigate = useNavigate()
   const localStreamRef = useRef()
   const [roomId, setRoomId] = useState("")
   const userId = "tesing1" // useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
-    window.location.href = `/${roomId}/create`
-
+    // window.location.href = `/${roomId}/create`
+    
+    navigate(`/${roomId}/create`)
     // if (localStreamRef.current != undefined) {
     //   localStreamRef.current.getTracks().map((track) => {
     //     track.stop()

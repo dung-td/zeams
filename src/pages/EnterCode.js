@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 import { useDispatch } from "react-redux"
-import { Routes, Route } from "react-router-dom"
+import { Routes, Route, useNavigate } from "react-router-dom"
 import { getFirestore, collection, getDocs } from "firebase/firestore/lite"
 
 import { db } from "../firebase"
@@ -14,6 +14,7 @@ const ERROR_TEXT = {
 
 function EnterCode() {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const [roomCode, setRoomCode] = useState("")
   const [errorText, setErrorText] = useState("")
 
@@ -22,10 +23,11 @@ function EnterCode() {
       getDocs(collection(db, "rooms")).then((querySnapshot) => {
         let exist = false
         querySnapshot.forEach((documentSnapshot) => {
-          console.log(documentSnapshot)
+          // console.log(documentSnapshot)
           if (documentSnapshot.data()?.roomId === roomCode) {
             exist = true
-            window.location.href = `/${roomCode}/join/${documentSnapshot.id}`
+            // window.location.href = `/${roomCode}/join/${documentSnapshot.id}`
+            navigate(`/${roomCode}/join/${documentSnapshot.id}`)
             return
           }
         })
@@ -81,7 +83,8 @@ function EnterCode() {
         <span
           className="hover:underline hover:cursor-pointer"
           onClick={() => {
-            window.location.href = "/create"
+            // window.location.href = "/create"
+            navigate(`/create`)
           }}
         >
           create new room

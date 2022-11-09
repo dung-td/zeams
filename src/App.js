@@ -10,17 +10,15 @@ import Meeting from "./pages/Meeting"
 
 function App() {
   return (
-    <Provider store={store}>
-      <div className="min-h-screen relative bg-[#1c1f2e]">
-        <Routes>
-          <Route path="/" element={<EnterCode />} />
-          <Route path="/create" element={<CreatRoom />} />
-          <Route path="/:roomId/join/:roomRef" element={<JoinRoom />} />
-          <Route path="/:roomId/:action" element={<Meeting />} />
-          <Route path="/:roomId/:action/:roomRef" element={<Meeting />} />
-        </Routes>
-      </div>
-    </Provider>
+    <div className="min-h-screen relative bg-[#1c1f2e]">
+      <Routes>
+        <Route path="/" element={<EnterCode />} />
+        <Route path="/create" element={<CreatRoom />} />
+        <Route path="/:roomId/join/:roomRef" element={<JoinRoom />} />
+        <Route path="/:roomId/:action" element={<Meeting />} />
+        <Route path="/:roomId/:action/:roomRef" element={<Meeting />} />
+      </Routes>
+    </div>
   )
 }
 
