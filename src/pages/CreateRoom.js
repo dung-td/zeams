@@ -16,7 +16,7 @@ const mediaConstraints = {
 function CreatRoom() {
   const localStreamRef = useRef()
   const [roomId, setRoomId] = useState("")
-  const userId = useSelector(selectUserId)
+  const userId = "tesing1" // useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
     window.location.href = `/${roomId}/create`
@@ -29,6 +29,8 @@ function CreatRoom() {
     //   console.log("Clean up local media stream in ready screen!")
     // }
   }
+
+  console.log(userId)
 
   useEffect(() => {
     const gettingVideoStream = () => {

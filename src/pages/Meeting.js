@@ -43,7 +43,7 @@ function Meeting() {
   const dispatch = useDispatch()
   const localStreamRef = useRef()
   const otherPeers = useRef([])
-  const userId = useSelector(selectUserId)
+  let userId = "" //useSelector(selectUserId)
   const [others, setOthers] = useState([])
   const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
@@ -64,7 +64,7 @@ function Meeting() {
     for (let i = 0; i < otherPeers.current.length; i++) {
       const peer = otherPeers.current[i]
 
-      if (peer.id == msg.sender) {
+      if (peer.id === msg.sender) {
         result = i
         break
       }
@@ -192,6 +192,10 @@ function Meeting() {
   }
 
   const connectServer = () => {
+    console.log(userId)
+    console.log(roomId)
+    console.log(roomRef)
+
     sendToServer({
       type: "join",
       roomId: roomId,
@@ -199,7 +203,7 @@ function Meeting() {
       data: {
         sender: userId,
       },
-      create: action === "join" ? false : true,
+      create: action === "in" ? false : true,
     })
 
     connection.on("message", async (msg) => {
@@ -208,7 +212,7 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver == userId) {
+          if (obj.data.receiver != null && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
 
             let arr = []
@@ -459,6 +463,11 @@ function Meeting() {
   // initialize socket-io connection
   useEffect(() => {
     preLoadLocalStream()
+
+    if (action === "create") {
+      userId = "testing1"
+    } else userId = "testing2"
+
     connectServer()
 
     return () => {

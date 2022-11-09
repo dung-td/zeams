@@ -15,8 +15,9 @@ function App() {
         <Routes>
           <Route path="/" element={<EnterCode />} />
           <Route path="/create" element={<CreatRoom />} />
-          <Route path="/:roomId/join" element={<JoinRoom />} />
+          <Route path="/:roomId/join/:roomRef" element={<JoinRoom />} />
           <Route path="/:roomId/:action" element={<Meeting />} />
+          <Route path="/:roomId/:action/:roomRef" element={<Meeting />} />
         </Routes>
       </div>
     </Provider>

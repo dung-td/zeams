@@ -25,7 +25,7 @@ function EnterCode() {
           console.log(documentSnapshot)
           if (documentSnapshot.data()?.roomId === roomCode) {
             exist = true
-            window.location.href = `/${roomCode}/join`
+            window.location.href = `/${roomCode}/join/${documentSnapshot.id}`
             return
           }
         })
@@ -44,7 +44,7 @@ function EnterCode() {
         userId: generateRoomId(),
       })
     )
-  })
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">

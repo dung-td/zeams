@@ -15,15 +15,16 @@ const mediaConstraints = {
 function JoinRoom() {
   const localStreamRef = useRef()
   const { roomId } = useParams()
-  const userId = useSelector(selectUserId)
+  const { roomRef } = useParams()
+  const userId = "testing2" //useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
-    // if (localStreamRef.current != undefined) {
-    //   localStreamRef.current = undefined
-    //   console.log("Clean up local media stream in ready screen!")
-    // }
+    if (localStreamRef.current != undefined) {
+      localStreamRef.current = undefined
+      console.log("Clean up local media stream in ready screen!")
+    }
 
-    window.location.href = `/${roomId}`
+    window.location.href = `/${roomId}/in/${roomRef}`
   }
 
   useEffect(() => {
