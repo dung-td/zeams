@@ -10,7 +10,7 @@ import Meeting from "./pages/Meeting"
 
 function App() {
   return (
-    <div className="min-h-screen relative bg-[#1c1f2e]">
+    <div className="min-h-screen relative bg-[#fff]">
       <Routes>
         <Route path="/" element={<EnterCode />} />
         <Route path="/create" element={<CreatRoom />} />

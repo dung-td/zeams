@@ -395,9 +395,10 @@ function Meeting() {
           } else {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
+            otherPeers.current[index].remoteStream = remoteStream
           }
           remoteStreamRef.current.srcObject = remoteStream
-          otherPeers.current[index].remoteStream = remoteStream
+          // otherPeers.current[index].remoteStream = remoteStream
           deepClonePeers()
         }
       )
@@ -487,7 +488,7 @@ function Meeting() {
   }, [otherPeers.current])
 
   return (
-    <div className="min-h-screen relative bg-[#1c1f2e]">
+    <div className="min-h-screen relative bg-black">
       <div className="w-2/4 h-3/4 p-8 justify-center relative">
         <div>
           <video ref={localStreamRef} autoPlay></video>
@@ -562,7 +563,7 @@ function Meeting() {
               <div className="flex flex-row items-center justify-between">
                 <div className="flex flex-row mt-4 items-center">
                   <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                  <p className="font-bold"> Tống Đức Dũng</p>
+                  <p className="font-bold"> Tống Đức Dũng 🐆</p>
                   <div className="ml-4 flex flex-row items-center">
                     <p>9:00 PM</p>
                   </div>

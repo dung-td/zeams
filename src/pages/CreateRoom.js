@@ -53,7 +53,7 @@ function CreatRoom() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="p-4">
-        <p className="text-white text-xl">
+        <p className="text-black text-2xl">
           Meeting code: <span>{roomId}</span>
         </p>
       </div>
@@ -62,7 +62,7 @@ function CreatRoom() {
       </div>
 
       <div
-        className="bg-[#BF3325] my-4 flex justify-center items-center px-4 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer"
+        className="bg-[#000] w-48 my-4 flex justify-center items-center px-4 py-2 rounded-md mx-8 hover:bg-blue-500 hover:cursor-pointer"
         onClick={() => {
           handleJoiningMeet()
         }}

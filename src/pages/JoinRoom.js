@@ -17,7 +17,7 @@ function JoinRoom() {
   const localStreamRef = useRef()
   const { roomId } = useParams()
   const { roomRef } = useParams()
-  const userId = "testing2" //useSelector(selectUserId)p)
+  const userId = "testing1"//useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
@@ -45,7 +45,7 @@ function JoinRoom() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="p-4">
-        <p className="text-white text-xl">
+        <p className="text-black text-2xl font-bold">
           <span>{roomId}</span>
         </p>
       </div>
@@ -54,10 +54,8 @@ function JoinRoom() {
       </div>
 
       <div
-        className="bg-[#BF3325] my-4 flex justify-center items-center px-4 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer"
-        onClick={() => {
-          handleJoiningMeet()
-        }}
+        className="bg-[#000] w-48 my-4 flex justify-center items-center px-4 py-2 rounded-md mx-8 hover:bg-blue-500 hover:cursor-pointer"
+        onClick={handleJoiningMeet}
       >
         <p className="text-white ">Join now</p>
       </div>
