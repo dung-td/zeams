@@ -23,14 +23,14 @@ function CreatRoom() {
   const userId = useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
+    if (localStreamRef.current != undefined) {
+      localStreamRef.current.getTracks().map((track) => {
+        track.stop()
+      })
+      localStreamRef(undefined)
+      console.log("Clean up local media stream in ready screen!")
+    }
     navigate(`/${roomId}/create`)
-    // if (localStreamRef.current != undefined) {
-    //   localStreamRef.current.getTracks().map((track) => {
-    //     track.stop()
-    //   })
-    //   localStreamRef(undefined)
-    //   console.log("Clean up local media stream in ready screen!")
-    // }
   }
 
   console.log(userId)

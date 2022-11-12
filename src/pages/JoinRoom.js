@@ -20,7 +20,7 @@ function JoinRoom() {
   const userId = useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
-    if (localStreamRef.current != undefined) {
+    if (localStreamRef.current !== undefined) {
       localStreamRef.current = undefined
       console.log("Clean up local media stream in ready screen!")
     }
