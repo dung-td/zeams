@@ -395,7 +395,8 @@ function Meeting() {
           } else {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
-            otherPeers.current[index].remoteStream = remoteStream
+            otherPeers.current[index] = {...otherPeers.current[index], remoteStream: remoteStream}
+            // otherPeers.current[index].remoteStream = remoteStream
           }
           remoteStreamRef.current.srcObject = remoteStream
           // otherPeers.current[index].remoteStream = remoteStream
@@ -493,11 +494,14 @@ function Meeting() {
         <div>
           <video ref={localStreamRef} autoPlay></video>
 
-          {otherPeers.current.length > 0 && (
+          {/* {otherPeers.current.length > 0 && (
             <div>
               <video ref={remoteStreamRef} autoPlay></video>
             </div>
-          )}
+          )} */}
+          <div>
+              <video ref={remoteStreamRef} autoPlay></video>
+            </div>
         </div>
       </div>
 
