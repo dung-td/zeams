@@ -8,6 +8,7 @@ import { generateRoomId } from "../utils"
 const mediaConstraints = {
   audio: true,
   video: {
+    height: 320,
     frameRate: 60,
     facingMode: "user", // 'user'
   },
@@ -17,11 +18,11 @@ function CreatRoom() {
   const navigate = useNavigate()
   const localStreamRef = useRef()
   const [roomId, setRoomId] = useState("")
-  const userId = "tesing1" // useSelector(selectUserId)
+  const [isMicOn, setIsMicOn] = useState(true)
+  const [isCamOn, setIsCamOn] = useState(true)
+  const userId = useSelector(selectUserId)
 
   const handleJoiningMeet = () => {
-    // window.location.href = `/${roomId}/create`
-    
     navigate(`/${roomId}/create`)
     // if (localStreamRef.current != undefined) {
     //   localStreamRef.current.getTracks().map((track) => {
@@ -35,6 +36,10 @@ function CreatRoom() {
   console.log(userId)
 
   useEffect(() => {
+    setRoomId(generateRoomId())
+  }, [])
+
+  useEffect(() => {
     const gettingVideoStream = () => {
       try {
         console.log("Get user media")
@@ -46,9 +51,10 @@ function CreatRoom() {
       }
     }
 
-    setRoomId(generateRoomId())
-    gettingVideoStream()
-  }, [])
+    if (isCamOn) {
+      gettingVideoStream()
+    }
+  }, [isCamOn])
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
@@ -58,7 +64,38 @@ function CreatRoom() {
         </p>
       </div>
       <div>
-        <video ref={localStreamRef} autoPlay></video>
+        {isCamOn ? (
+          <video className="rounded-xl" ref={localStreamRef} autoPlay></video>
+        ) : (
+          <img
+            className="h-80 rounded-xl"
+            src={require("../img/image1.jpg")}
+          ></img>
+        )}
+      </div>
+
+      <div className="flex flex-row mt-4 items-center gap-1 text-white">
+        <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl">
+          <span
+            className="material-icons hover:cursor-pointer"
+            onClick={() => {
+              setIsMicOn(!isMicOn)
+            }}
+          >
+            {isMicOn ? "mic" : "mic_off"}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl">
+          <span
+            className="material-icons hover:cursor-pointer h-full"
+            onClick={() => {
+              setIsCamOn(!isCamOn)
+            }}
+          >
+            {isCamOn ? "videocam" : "videocam_off"}
+          </span>
+        </div>
       </div>
 
       <div

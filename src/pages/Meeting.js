@@ -28,7 +28,7 @@ const mediaConstraints = {
     frameRate: 60,
     facingMode: "user", // 'user'
     width: { min: 600, ideal: 1920, max: 600 },
-    height: { min: 400, ideal: 1080, max: 400 },
+    height: { min: 300, ideal: 1080, max: 400 },
   },
 }
 const sessionConstraints = {
@@ -44,17 +44,17 @@ function Meeting() {
   const localStreamRef = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
-  let userId = "" //useSelector(selectUserId)
+  let userId = useSelector(selectUserId)
   const [others, setOthers] = useState([])
   const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
+
   const [isSharing, setIsSharing] = useState(false)
+  const [isMicOn, setIsMicOn] = useState(true)
+  const [isCamOn, setIsCamOn] = useState(true)
+
   const localStream = useSelector(selectLocalStream)
   const [initialising, setInitialising] = useState(true)
-
-  if (action === "create") {
-    userId = "testing1"
-  } else userId = "testing2"
 
   const deepClonePeers = () => {
     dispatch(
@@ -590,20 +590,35 @@ function Meeting() {
         </div>
       </div>
 
+      {/* Bottom button */}
       <div className="flex flex-row m-4 gap-4 absolute bottom-0 justify-center w-3/4">
         <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
-          <span className="material-icons text-white">mic</span>
+          <span
+            className="material-icons text-white"
+            onClick={() => {
+              setIsMicOn(!isMicOn)
+            }}
+          >
+            {isMicOn ? "mic" : "mic_off"}
+          </span>
           <span className="material-icons text-white">expand_less</span>
         </div>
         <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span className="material-icons text-white mr-2">videocam</span>
+          <span
+            className="material-icons text-white mr-2"
+            onClick={() => {
+              setIsCamOn(!isCamOn)
+            }}
+          >
+            {isCamOn ? "videocam" : "videocam_off"}
+          </span>
           <span className="material-icons text-white">expand_less</span>
         </div>
         <div className="bg-[#0e78f8] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
           <span className="material-icons text-white mr-2">people</span>
           <span className="material-icons text-white">expand_less</span>
         </div>
-        <div className="bg-[#BF3325] flex justify-center items-center px-4 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
+        <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
           <p className="text-white">End Meeting</p>
         </div>
         <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">

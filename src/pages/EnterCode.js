@@ -23,10 +23,8 @@ function EnterCode() {
       getDocs(collection(db, "rooms")).then((querySnapshot) => {
         let exist = false
         querySnapshot.forEach((documentSnapshot) => {
-          // console.log(documentSnapshot)
           if (documentSnapshot.data()?.roomId === roomCode) {
             exist = true
-            // window.location.href = `/${roomCode}/join/${documentSnapshot.id}`
             navigate(`/${roomCode}/join/${documentSnapshot.id}`)
             return
           }
@@ -50,6 +48,8 @@ function EnterCode() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="text-3xl text-white mb-6">ZEAM</div>
+
       <div>
         <input
           value={roomCode}
@@ -83,7 +83,6 @@ function EnterCode() {
         <span
           className="hover:underline hover:cursor-pointer"
           onClick={() => {
-            // window.location.href = "/create"
             navigate(`/create`)
           }}
         >
