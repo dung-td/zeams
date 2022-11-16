@@ -48,7 +48,7 @@ function EnterCode() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="text-3xl text-white mb-6">ZEAM</div>
+      <div className="text-3xl text-white mb-6">ZEAMS</div>
 
       <div>
         <input

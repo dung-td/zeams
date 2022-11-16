@@ -24,10 +24,10 @@ function CreatRoom() {
 
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
-      localStreamRef.current.getTracks().map((track) => {
-        track.stop()
-      })
-      localStreamRef(undefined)
+      // localStreamRef.current.getTracks().map((track) => {
+      //   track.stop()
+      // })
+      localStreamRef.current = undefined
       console.log("Clean up local media stream in ready screen!")
     }
     navigate(`/${roomId}/create`)

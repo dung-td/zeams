@@ -41,6 +41,7 @@ function Meeting() {
   const { action } = useParams()
   const { roomRef } = useParams()
   const dispatch = useDispatch()
+
   const localStreamRef = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
@@ -52,16 +53,16 @@ function Meeting() {
   const [isSharing, setIsSharing] = useState(false)
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
-
-  const localStream = useSelector(selectLocalStream)
   const [initialising, setInitialising] = useState(true)
+  const localStream = useSelector(selectLocalStream)
 
   const deepClonePeers = () => {
-    dispatch(
-      updateOtherPeers({
-        otherPeers: [...otherPeers.current],
-      })
-    )
+    // dispatch(
+    //   updateOtherPeers({
+    //     otherPeers: [...otherPeers.current],
+    //   })
+    // )
+    setOthers([...otherPeers.current])
   }
 
   const findOfferIndex = (msg) => {
@@ -79,7 +80,7 @@ function Meeting() {
 
   const preLoadLocalStream = () => {
     navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-      dispatch(updateLocalStream({ localStream: stream }))
+      // dispatch(updateLocalStream({ localStream: stream }))
       localStreamRef.current.srcObject = stream
     })
   }
@@ -350,8 +351,10 @@ function Meeting() {
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
 
-      navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-        dispatch(updateLocalStream({ localStream: stream }))
+      navigator.mediaDevices.getUserMedia(mediaConstraints)
+      .then((stream) => {
+        // dispatch(updateLocalStream({ localStream: stream }))
+        localStreamRef.current.srcObject = stream
         stream?.getTracks().forEach((track) => {
           otherPeers.current[index].peerConnection.addTrack(track)
         })
@@ -396,7 +399,7 @@ function Meeting() {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
           }
-          remoteStreamRef.current.srcObject = remoteStream
+          // remoteStreamRef.current.srcObject = remoteStream
           otherPeers.current[index].remoteStream = remoteStream
           deepClonePeers()
         }
@@ -488,16 +491,25 @@ function Meeting() {
 
   return (
     <div className="min-h-screen relative bg-[#1c1f2e]">
-      <div className="w-2/4 h-3/4 p-8 justify-center relative">
-        <div>
-          <video ref={localStreamRef} autoPlay></video>
+      <div className="w-2/4 h-3/4 p-8 items-center justify-center relative flex-wrap flex-row">
+        <video ref={localStreamRef} autoPlay></video>
 
-          {otherPeers.current.length > 0 && (
-            <div>
-              <video ref={remoteStreamRef} autoPlay></video>
-            </div>
-          )}
-        </div>
+        {
+          others.map((peer) => {
+            return (
+              peer.remoteStream ?
+              <div className={`w-1/${others.length} mx-2 my-2`}>
+                <video
+                  ref={(ref) => {
+                    if (ref)
+                      ref.srcObject = peer.remoteStream
+                  }}
+                  autoPlay
+                />
+              </div> : null
+            )
+          })
+        }
       </div>
 
       {/* Participant */}
