@@ -1,16 +1,14 @@
+import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { useParams } from "react-router-dom"
 
-import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import { connection } from "../utils"
 import {
   selectLocalStream,
   updateLocalStream,
   updateOtherPeers,
 } from "../redux/slices/ConnectionSlice"
-
-import { generateRoomId, connection } from "../utils"
-import { db } from "../firebase"
+import { selectUserId } from "../redux/slices/AuthenticationSlice"
 
 const isVoiceOnly = false
 const servers = {
@@ -43,16 +41,15 @@ function Meeting() {
   const dispatch = useDispatch()
 
   const localStreamRef = useRef()
-  const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
   const [others, setOthers] = useState([])
   const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
 
-  const [isSharing, setIsSharing] = useState(false)
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
+  const [isSharing, setIsSharing] = useState(false)
   const [initialising, setInitialising] = useState(true)
   const localStream = useSelector(selectLocalStream)
 
@@ -490,15 +487,17 @@ function Meeting() {
   }, [otherPeers.current])
 
   return (
-    <div className="min-h-screen relative bg-[#1c1f2e]">
-      <div className="w-2/4 h-3/4 p-8 items-center justify-center relative flex-wrap flex-row">
-        <video ref={localStreamRef} autoPlay></video>
+    <div className="min-h-screen w-full relative bg-[#1c1f2e]">
+      <div className="w-full h-full p-8 justify-center relative flex flex-row flex-wrap">
+        <div className={`w-5/12 mx-3 my-3`}>
+          <video ref={localStreamRef} autoPlay/>
+        </div>
 
         {
           others.map((peer) => {
             return (
               peer.remoteStream ?
-              <div className={`w-1/${others.length} mx-2 my-2`}>
+              <div key={peer.id} className={`w-5/12 mx-3 my-3`}>
                 <video
                   ref={(ref) => {
                     if (ref)
@@ -557,7 +556,7 @@ function Meeting() {
       </div>
 
       {/* Chat */}
-      <div className="">
+      <div className="hidden">
         <div className="flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md h-5/6">
           <div className="w-full">
             <p className="font-bold text-xl">Chat</p>
