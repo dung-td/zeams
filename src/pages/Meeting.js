@@ -50,7 +50,12 @@ function Meeting() {
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
   const [isSharing, setIsSharing] = useState(false)
+  const [isOpenSideBar, setIsOpenSideBar] = useState(false)
+  const [isOpenChat, setIsOpenChat] = useState(false)
+  const [isOpenAttend, setIsOpenAttend] = useState(false)
+
   const [initialising, setInitialising] = useState(true)
+  const [camAmount, setCamAmount] = useState()
   const localStream = useSelector(selectLocalStream)
 
   const deepClonePeers = () => {
@@ -348,8 +353,7 @@ function Meeting() {
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
 
-      navigator.mediaDevices.getUserMedia(mediaConstraints)
-      .then((stream) => {
+      navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
         // dispatch(updateLocalStream({ localStream: stream }))
         localStreamRef.current.srcObject = stream
         stream?.getTracks().forEach((track) => {
@@ -488,121 +492,132 @@ function Meeting() {
 
   return (
     <div className="min-h-screen w-full relative bg-[#1c1f2e]">
-      <div className="w-full h-full p-8 justify-center relative flex flex-row flex-wrap">
-        <div className={`w-5/12 mx-3 my-3`}>
-          <video ref={localStreamRef} autoPlay/>
-        </div>
+      <div className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center">
+        <div
+          className={`${
+            isOpenSideBar ? "w-9/12 " : "w-full "
+          } flex flex-row flex-wrap`}
+        >
+          <div className="w-6/12 p-2">
+            <video ref={localStreamRef} autoPlay />
+          </div>
 
-        {
-          others.map((peer) => {
-            return (
-              peer.remoteStream ?
-              <div key={peer.id} className={`w-5/12 mx-3 my-3`}>
+          <div className="w-6/12 p-2">
+            <img className="rounded-md" src={require("../img/image1.jpg")} />
+          </div>
+
+          {/* {others.map((peer) => {
+            return peer.remoteStream ? (
+              <div key={peer.id} className={`w-12/12 mx-3 my-3`}>
                 <video
                   ref={(ref) => {
-                    if (ref)
-                      ref.srcObject = peer.remoteStream
+                    if (ref) ref.srcObject = peer.remoteStream
                   }}
                   autoPlay
                 />
-              </div> : null
-            )
-          })
-        }
-      </div>
-
-      {/* Participant */}
-      <div className="hidden flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md">
-        <div className="w-full">
-          <p className="font-bold text-xl">Participant</p>
-          <div className=" mt-4">
-            <input
-              type="text"
-              id="first_name"
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              placeholder="Search for people"
-              required
-            />
-          </div>
-          <div className="flex flex-row mt-4 items-center justify-between">
-            <div className="flex flex-row mt-4 items-center">
-              <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-              <p> Tống Đức Dũng</p>
-            </div>
-            <div className="flex flex-row mt-4 items-center gap-1">
-              <span className="material-icons hover:cursor-pointer">
-                mic_off
-              </span>
-              <span className="material-icons hover:cursor-pointer">
-                videocam_off
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-row mt-4 items-center justify-between">
-            <div className="flex flex-row mt-4 items-center">
-              <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-              <p> Tống Đức Dũng</p>
-            </div>
-            <div className="flex flex-row mt-4 items-center gap-1">
-              <span className="material-icons hover:cursor-pointer">
-                mic_off
-              </span>
-              <span className="material-icons hover:cursor-pointer">
-                videocam_off
-              </span>
-            </div>
-          </div>
+              </div>
+            ) : null
+          })} */}
         </div>
-      </div>
 
-      {/* Chat */}
-      <div className="hidden">
-        <div className="flex absolute right-5 top-8 bg-white w-1/4 p-4 rounded-md h-5/6">
-          <div className="w-full">
-            <p className="font-bold text-xl">Chat</p>
-            <div className="my-4">
-              <input
-                type="text"
-                id="first_name"
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Search for people"
-                required
-              />
-            </div>
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <div className="flex flex-row mt-4 items-center">
-                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                  <p className="font-bold"> Tống Đức Dũng</p>
-                  <div className="ml-4 flex flex-row items-center">
-                    <p>9:00 PM</p>
+        {/* Participant */}
+        <div className={isOpenSideBar ? "w-3/12" : "hidden"}>
+          {isOpenChat ? (
+            <div className="flex bg-white p-4 rounded-md h-full">
+              <div className="w-full">
+                <p className="font-bold text-xl">Chat</p>
+                <div className="my-4">
+                  <input
+                    type="text"
+                    id="first_name"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Search for people"
+                    required
+                  />
+                </div>
+                <div>
+                  <div className="flex flex-row items-center justify-between">
+                    <div className="flex flex-row mt-4 items-center">
+                      <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                      <p className="font-bold"> Tống Đức Dũng</p>
+                      <div className="ml-4 flex flex-row items-center">
+                        <p>9:00 PM</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p> Xin chào mọi người!</p>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex flex-row items-center justify-between">
+                    <div className="flex flex-row mt-4 items-center">
+                      <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                      <p className="font-bold"> MCD</p>
+                      <div className="ml-4 flex flex-row items-center">
+                        <p>9:00 PM</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <p> Hi chào bạn!</p>
                   </div>
                 </div>
               </div>
-              <div className="p-4">
-                <p> Xin chào mọi người!</p>
-              </div>
             </div>
-            <div>
-              <div className="flex flex-row items-center justify-between">
-                <div className="flex flex-row mt-4 items-center">
-                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                  <p className="font-bold"> MCD</p>
-                  <div className="ml-4 flex flex-row items-center">
-                    <p>9:00 PM</p>
+          ) : (
+            <div className="flex bg-white p-4 rounded-md h-full">
+              <div className="w-full">
+                <p className="font-bold text-xl">Participant</p>
+                <div className=" mt-4">
+                  <input
+                    type="text"
+                    id="first_name"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    placeholder="Search for people"
+                    required
+                  />
+                </div>
+                <div className="flex flex-row mt-4 items-center justify-between">
+                  <div className="flex flex-row mt-4 items-center">
+                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                    <p> Tống Đức Dũng</p>
+                  </div>
+                  <div className="flex flex-row mt-4 items-center gap-1">
+                    <span className="material-icons hover:cursor-pointer">
+                      mic_off
+                    </span>
+                    <span className="material-icons hover:cursor-pointer">
+                      videocam_off
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-row mt-4 items-center justify-between">
+                  <div className="flex flex-row mt-4 items-center">
+                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                    <p> Tống Đức Dũng</p>
+                  </div>
+                  <div className="flex flex-row mt-4 items-center gap-1">
+                    <span className="material-icons hover:cursor-pointer">
+                      mic_off
+                    </span>
+                    <span className="material-icons hover:cursor-pointer">
+                      videocam_off
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="p-4">
-                <p> Hi chào bạn!</p>
-              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Bottom button */}
-      <div className="flex flex-row m-4 gap-4 absolute bottom-0 justify-center w-3/4">
+      <div
+        className={`${
+          isOpenSideBar ? "w-9/12" : "w-full"
+        } flex flex-row mb-4 gap-4 absolute bottom-0 justify-center`}
+      >
         <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
           <span
             className="material-icons text-white"
