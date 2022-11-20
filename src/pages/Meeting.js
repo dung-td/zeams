@@ -9,6 +9,7 @@ import {
   updateOtherPeers,
 } from "../redux/slices/ConnectionSlice"
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import Video from "../component/VideoComponent"
 
 const isVoiceOnly = false
 const servers = {
@@ -506,18 +507,19 @@ function Meeting() {
             <img className="rounded-md" src={require("../img/image1.jpg")} />
           </div>
 
-          {/* {others.map((peer) => {
+          {others.map((peer) => {
             return peer.remoteStream ? (
               <div key={peer.id} className={`w-12/12 mx-3 my-3`}>
-                <video
+                {/* <video
                   ref={(ref) => {
                     if (ref) ref.srcObject = peer.remoteStream
                   }}
                   autoPlay
-                />
+                /> */}
+                <Video remoteStream={peer.remoteStream} />
               </div>
             ) : null
-          })} */}
+          })}
         </div>
 
         {/* Participant */}
