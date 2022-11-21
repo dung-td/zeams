@@ -402,6 +402,7 @@ function Meeting() {
           }
           // remoteStreamRef.current.srcObject = remoteStream
           otherPeers.current[index].remoteStream = remoteStream
+          addPeerToView(remoteStream)
           deepClonePeers()
         }
       )
@@ -465,6 +466,19 @@ function Meeting() {
     }
   }
 
+  const addPeerToView = (remoteStream) => {
+    let layer = document.querySelector("#layer")
+
+    const videoContainer = document.createElement("div")
+    videoContainer.className = "w-6/12 p-2"
+
+    const video = document.createElement("video")
+    video.srcObject = remoteStream
+
+    videoContainer.appendChild(video)
+    layer.appendChild(videoContainer)
+  }
+
   // initialize socket-io connection
   useEffect(() => {
     preLoadLocalStream()
@@ -494,6 +508,7 @@ function Meeting() {
     <div className="min-h-screen w-full relative bg-[#1c1f2e]">
       <div className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center">
         <div
+          id="layer"
           className={`${
             isOpenSideBar ? "w-9/12 " : "w-full "
           } flex flex-row flex-wrap`}
@@ -502,8 +517,12 @@ function Meeting() {
             <video ref={localStreamRef} autoPlay />
           </div>
 
-          <div className="w-6/12 p-2">
+          {/* <div className="w-6/12 p-2">
             <img className="rounded-md" src={require("../img/image1.jpg")} />
+          </div> */}
+
+          <div className="w-6/12 p-2">
+            <video ref={localStreamRef} autoPlay />
           </div>
 
           {/* {others.map((peer) => {
