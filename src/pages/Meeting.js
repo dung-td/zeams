@@ -1,7 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-
 import { connection } from "../utils"
 import {
   selectLocalStream,
@@ -41,6 +40,7 @@ function Meeting() {
   const dispatch = useDispatch()
 
   const localStreamRef = useRef()
+  const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
   const [others, setOthers] = useState([])
@@ -401,7 +401,7 @@ function Meeting() {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
           }
-          // remoteStreamRef.current.srcObject = remoteStream
+          remoteStreamRef.current.srcObject = event.streams[0]
           otherPeers.current[index].remoteStream = remoteStream
           addPeerToView(remoteStream)
           deepClonePeers()
@@ -468,6 +468,8 @@ function Meeting() {
   }
 
   const addPeerToView = (remoteStream) => {
+    console.log("Add view to layout")
+    console.log(remoteStream)
     let layer = document.querySelector("#layer")
 
     const videoContainer = document.createElement("div")
@@ -506,17 +508,25 @@ function Meeting() {
     }
   }, [otherPeers.current])
 
+  useEffect(() => {
+    setIsOpenSideBar(isOpenAttend || isOpenChat)
+  }, [isOpenAttend, isOpenChat])
+
   return (
-    <div className="min-h-screen w-full relative bg-[#1c1f2e]">
+    <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
       <div className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center">
         <div
           id="layer"
           className={`${
             isOpenSideBar ? "w-9/12 " : "w-full "
-          } flex flex-row flex-wrap`}
+          } flex flex-row flex-wrap max-h-screen`}
         >
           <div className="w-6/12 p-2">
             <video ref={localStreamRef} autoPlay />
+          </div>
+
+          <div className="w-6/12 p-2">
+            <video ref={remoteStreamRef} autoPlay />
           </div>
 
           {/* {others.map((peer) => {
@@ -533,10 +543,10 @@ function Meeting() {
           })} */}
         </div>
 
-        {/* Participant */}
+        {/* Sidebar */}
         <div className={isOpenSideBar ? "w-3/12" : "hidden"}>
           {isOpenChat ? (
-            <div className="flex bg-white p-4 rounded-md h-full">
+            <div className="flex flex-col bg-white p-4 rounded-md h-full justify-between">
               <div className="w-full">
                 <p className="font-bold text-xl">Chat</p>
                 <div className="my-4">
@@ -575,6 +585,30 @@ function Meeting() {
                   <div className="p-4">
                     <p> Hi chào bạn!</p>
                   </div>
+                </div>
+              </div>
+
+              <div className="relative">
+                <input
+                  type="text"
+                  class="bg-gray-50 border pr-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="Enter message to send to everyone"
+                />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-auto">
+                  <svg
+                    class="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"
+                    ></path>
+                  </svg>
                 </div>
               </div>
             </div>
@@ -627,54 +661,74 @@ function Meeting() {
 
       {/* Bottom button */}
       <div
-        className={`${
-          isOpenSideBar ? "w-9/12" : "w-full"
-        } flex flex-row mb-4 gap-4 absolute bottom-0 justify-center`}
+        className={`w-full flex flex-row mb-4 gap-4 absolute bottom-0 justify-between items-center px-8`}
       >
-        <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
-          <span
-            className="material-icons text-white"
+        <div className="text-white font-xl font-bold ">{roomId}</div>
+
+        <div className="flex flex-row gap-4">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
+            <span
+              className="material-icons text-white"
+              onClick={() => {
+                setIsMicOn(!isMicOn)
+              }}
+            >
+              {isMicOn ? "mic" : "mic_off"}
+            </span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+            <span
+              className="material-icons text-white mr-2"
+              onClick={() => {
+                setIsCamOn(!isCamOn)
+              }}
+            >
+              {isCamOn ? "videocam" : "videocam_off"}
+            </span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
+
+          <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
+            <p className="text-white">End Meeting</p>
+          </div>
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+            <span className="material-icons text-white mr-2">screen_share</span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+            <span className="material-icons text-white mr-2">
+              radio_button_checked
+            </span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
+        </div>
+
+        <div className="flex flex-row gap-2">
+          <div
+            className={`${
+              isOpenAttend ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
             onClick={() => {
-              setIsMicOn(!isMicOn)
+              setIsOpenAttend(!isOpenAttend)
+              setIsOpenChat(false)
             }}
           >
-            {isMicOn ? "mic" : "mic_off"}
-          </span>
-          <span className="material-icons text-white">expand_less</span>
-        </div>
-        <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span
-            className="material-icons text-white mr-2"
+            <span className="material-icons text-white mr-2">people</span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
+          <div
+            className={`${
+              isOpenChat ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
             onClick={() => {
-              setIsCamOn(!isCamOn)
+              setIsOpenChat(!isOpenChat)
+              setIsOpenAttend(false)
             }}
           >
-            {isCamOn ? "videocam" : "videocam_off"}
-          </span>
-          <span className="material-icons text-white">expand_less</span>
-        </div>
-        <div className="bg-[#0e78f8] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span className="material-icons text-white mr-2">people</span>
-          <span className="material-icons text-white">expand_less</span>
-        </div>
-        <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
-          <p className="text-white">End Meeting</p>
-        </div>
-        <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span className="material-icons text-white mr-2">screen_share</span>
-          <span className="material-icons text-white">expand_less</span>
-        </div>
-        <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span className="material-icons text-white mr-2">
-            radio_button_checked
-          </span>
-          <span className="material-icons text-white">expand_less</span>
-        </div>
-        <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-          <span className="material-icons text-white mr-2">
-            question_answer
-          </span>
-          <span className="material-icons text-white">expand_less</span>
+            <span className="material-icons text-white">question_answer</span>
+            <span className="material-icons text-white">expand_less</span>
+          </div>
         </div>
       </div>
     </div>
