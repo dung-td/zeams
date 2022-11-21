@@ -64,7 +64,7 @@ function Meeting() {
     //     otherPeers: [...otherPeers.current],
     //   })
     // )
-    setOthers([...otherPeers.current])
+    // setOthers([...otherPeers.current])
   }
 
   const findOfferIndex = (msg) => {
@@ -391,11 +391,12 @@ function Meeting() {
         (event) => {
           let remoteStream = new MediaStream()
           console.log("In Track")
-          if (event.streams[0] !== undefined) {
+          if (event.streams[0]) {
             console.log("streams[0]")
-            event.streams[0].getTracks().forEach((track) => {
-              remoteStream.addTrack(track)
-            })
+            // event.streams[0].getTracks().forEach((track) => {
+            //   remoteStream.addTrack(track)
+            // })
+            remoteStream = event.streams[0]
           } else {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
@@ -473,6 +474,7 @@ function Meeting() {
     videoContainer.className = "w-6/12 p-2"
 
     const video = document.createElement("video")
+    video.autoplay = true
     video.srcObject = remoteStream
 
     videoContainer.appendChild(video)
@@ -513,14 +515,6 @@ function Meeting() {
             isOpenSideBar ? "w-9/12 " : "w-full "
           } flex flex-row flex-wrap`}
         >
-          <div className="w-6/12 p-2">
-            <video ref={localStreamRef} autoPlay />
-          </div>
-
-          {/* <div className="w-6/12 p-2">
-            <img className="rounded-md" src={require("../img/image1.jpg")} />
-          </div> */}
-
           <div className="w-6/12 p-2">
             <video ref={localStreamRef} autoPlay />
           </div>
