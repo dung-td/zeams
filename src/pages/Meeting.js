@@ -22,7 +22,10 @@ const servers = {
   iceCandidatePoolSize: 10,
 }
 const mediaConstraints = {
-  audio: true,
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: true,
+  },
   video: {
     frameRate: 60,
     facingMode: "user", // 'user'
@@ -475,10 +478,10 @@ function Meeting() {
   const addPeerToView = (remoteStream) => {
     console.log("Add view to layout")
     console.log(remoteStream)
-    let layer = document.querySelector("#layer")
+    let layer = document.querySelector(".layer")
 
     const videoContainer = document.createElement("div")
-    videoContainer.className = "w-6/12 p-2"
+    videoContainer.className = "h-full flex flex-col rounded justify-center object-cover overflow-hidden"
 
     const video = document.createElement("video")
     video.autoplay = true
@@ -557,15 +560,15 @@ function Meeting() {
           // id="layer"
           className={`${
             isOpenSideBar ? "w-9/12 " : "w-full "
-          } flex flex-row  max-h-screen`}
+          } flex flex-row  max-h-screen layer`}
         >
           <div className="h-full flex flex-col justify-center">
             <video ref={localStreamRef} autoPlay />
           </div>
 
-          <div className="h-full flex flex-col justify-center">
+          {/* <div className="h-full flex flex-col justify-center">
             <img src={require("../img/image1.jpg")} />
-          </div>
+          </div> */}
 
           {/* <div className="h-full flex justify-center">
             <video ref={localStreamRef} autoPlay />
@@ -764,7 +767,7 @@ function Meeting() {
 
               setTimeout(() => {
                 updateLayoutRef.current()
-              }, 50)
+              }, 1)
             }}
           >
             <span className="material-icons text-white mr-2">people</span>
