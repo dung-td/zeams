@@ -1,6 +1,8 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
+import { flushSync } from "react-dom"
+import { PackedGrid } from "react-packed-grid"
 import { connection } from "../utils"
 import {
   selectLocalStream,
@@ -57,6 +59,9 @@ function Meeting() {
   const [initialising, setInitialising] = useState(true)
   const [camAmount, setCamAmount] = useState()
   const localStream = useSelector(selectLocalStream)
+
+  const updateLayoutRef = useRef()
+  const [aspectRatio, setAspectRatio] = useState(1)
 
   const deepClonePeers = () => {
     // dispatch(
@@ -513,21 +518,64 @@ function Meeting() {
     setIsOpenSideBar(isOpenAttend || isOpenChat)
   }, [isOpenAttend, isOpenChat])
 
+  // useEffect(() => {
+  //   console.log("Render layout")
+  //   console.log(document)
+  //   if (document.querySelector("#layout")) {
+  //     const layout = document.querySelector("#layout")
+  //     let layoutLength = layout.getBoundingClientRect().width
+
+  //     const parentLayout = document.querySelector("#parentLayout")
+  //     let parentLayoutLength = parentLayout.getBoundingClientRect().width
+
+  //     console.log("Layout length: " + layoutLength)
+  //     console.log("parentLayoutLength: " + parentLayoutLength)
+
+  //     if (layoutLength / parentLayoutLength == 9 / 16) {
+  //       if (!isOpenSideBar) {
+  //         updateLayoutRef.current()
+  //       }
+  //     } else {
+  //       if (isOpenSideBar) {
+  //         updateLayoutRef.current()
+  //       }
+  //     }
+  //   }
+  // })
+
   return (
     <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
-      <div className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center">
-        <div
-          id="layer"
+      <div
+        id="parentLayout"
+        className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center"
+      >
+        <PackedGrid
+          id="layout"
+          boxAspectRatio={aspectRatio}
+          // className="fullscreen"
+          updateLayoutRef={updateLayoutRef}
+          // id="layer"
           className={`${
             isOpenSideBar ? "w-9/12 " : "w-full "
-          } flex flex-row flex-wrap max-h-screen`}
+          } flex flex-row  max-h-screen`}
         >
-          <div className="w-6/12 p-2">
+          <div className="h-full flex flex-col justify-center">
             <video ref={localStreamRef} autoPlay />
           </div>
 
-          {/* <div className="w-6/12 p-2">
-            <video ref={remoteStreamRef} autoPlay />
+          <div className="h-full flex flex-col justify-center">
+            <img src={require("../img/image1.jpg")} />
+          </div>
+
+          {/* <div className="h-full flex justify-center">
+            <video ref={localStreamRef} autoPlay />
+          </div>
+
+          <div className="h-full flex justify-center">
+            <video ref={localStreamRef} autoPlay />
+          </div>
+          <div className="h-full flex justify-center">
+            <video ref={localStreamRef} autoPlay />
           </div> */}
 
           {/* {others.map((peer) => {
@@ -542,7 +590,7 @@ function Meeting() {
               </div>
             ) : null
           })} */}
-        </div>
+        </PackedGrid>
 
         {/* Sidebar */}
         <div className={isOpenSideBar ? "w-3/12" : "hidden"}>
@@ -713,6 +761,10 @@ function Meeting() {
             onClick={() => {
               setIsOpenAttend(!isOpenAttend)
               setIsOpenChat(false)
+
+              setTimeout(() => {
+                updateLayoutRef.current()
+              }, 50)
             }}
           >
             <span className="material-icons text-white mr-2">people</span>
