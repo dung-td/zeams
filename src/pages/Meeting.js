@@ -65,6 +65,7 @@ function Meeting() {
 
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
+  const [peersHTML, setPeersHTML] = useState([])
 
   const deepClonePeers = () => {
     // dispatch(
@@ -481,7 +482,7 @@ function Meeting() {
     let layer = document.querySelector(".layer")
 
     const videoContainer = document.createElement("div")
-    videoContainer.className = "h-full flex flex-col rounded justify-center object-cover overflow-hidden"
+    videoContainer.className = "h-full flex flex-col justify-center"
 
     const video = document.createElement("video")
     video.autoplay = true
@@ -489,7 +490,11 @@ function Meeting() {
     video.play()
 
     videoContainer.appendChild(video)
-    layer.appendChild(videoContainer)
+    // layer.appendChild(videoContainer)
+
+    peersHTML.push(videoContainer.innerHTML)
+    console.log(videoContainer.innerHTML)
+    updateLayoutRef.current()
   }
 
   // initialize socket-io connection
@@ -565,6 +570,10 @@ function Meeting() {
           <div className="h-full flex flex-col justify-center">
             <video ref={localStreamRef} autoPlay />
           </div>
+
+          {peersHTML.map((peerHTML) => {
+            return { peerHTML }
+          })}
 
           {/* <div className="h-full flex flex-col justify-center">
             <img src={require("../img/image1.jpg")} />
