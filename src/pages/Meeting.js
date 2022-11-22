@@ -401,7 +401,7 @@ function Meeting() {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
           }
-          remoteStreamRef.current.srcObject = event.streams[0]
+          //remoteStreamRef.current.srcObject = event.streams[0]
           otherPeers.current[index].remoteStream = remoteStream
           addPeerToView(remoteStream)
           deepClonePeers()
@@ -478,6 +478,7 @@ function Meeting() {
     const video = document.createElement("video")
     video.autoplay = true
     video.srcObject = remoteStream
+    video.play()
 
     videoContainer.appendChild(video)
     layer.appendChild(videoContainer)
@@ -525,9 +526,9 @@ function Meeting() {
             <video ref={localStreamRef} autoPlay />
           </div>
 
-          <div className="w-6/12 p-2">
+          {/* <div className="w-6/12 p-2">
             <video ref={remoteStreamRef} autoPlay />
-          </div>
+          </div> */}
 
           {/* {others.map((peer) => {
             return peer.remoteStream ? (
