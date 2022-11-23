@@ -8,6 +8,8 @@ import {
   selectLocalStream,
   updateLocalStream,
   updateOtherPeers,
+  addPeer,
+  selectOtherPeers
 } from "../redux/slices/ConnectionSlice"
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
 
@@ -44,6 +46,7 @@ function Meeting() {
   const { roomRef } = useParams()
   const dispatch = useDispatch()
 
+  const peers = useSelector(selectOtherPeers)
   const localStreamRef = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
@@ -358,7 +361,6 @@ function Meeting() {
   }
 
   const createPeerConnection = (index) => {
-    console.log("Index peer: " + index)
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
 
@@ -483,7 +485,8 @@ function Meeting() {
     let videoId = "remoteStream" + remoteStream.id.split("-")[0]
     videoContainer.id = videoId
 
-    setPeersHTML([...peersHTML, videoContainer.outerHTML])
+    dispatch(addPeer({ peer: videoContainer.outerHTML }))
+    // setPeersHTML([...peersHTML, videoContainer.outerHTML])
     console.log(videoContainer.outerHTML)
     console.log("Create video tag")
 
@@ -546,21 +549,21 @@ function Meeting() {
           } flex flex-row  max-h-screen layer`}
         >
           <div className="h-full flex flex-col justify-center">
-            <video ref={localStreamRef} autoPlay />
+            <video ref={localStreamRef} autoPlay muted/>
           </div>
 
-          {peersHTML.map((peerHTML) => {
-            console.log("Render peer!!!")
+          {peers.map((peerHTML) => {
+            console.log("LENGTH: " + peers.length)
             return (
-              <div className="h-full flex flex-col justify-center">
+              <div className="h-full flex flex-col justify-center object-cover overflow-hidden">
                 {parse(peerHTML)}
               </div>
             )
           })}
 
-          <div className="h-full flex flex-col justify-center">
+          {/* <div className="h-full flex flex-col justify-center">
             <img src={require("../img/image1.jpg")} />
-          </div>
+          </div> */}
 
           {/* <div className="h-full flex justify-center">
             <video ref={localStreamRef} autoPlay />
