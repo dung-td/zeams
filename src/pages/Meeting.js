@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { flushSync } from "react-dom"
+import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
 import { connection } from "../utils"
 import {
@@ -478,23 +478,26 @@ function Meeting() {
 
   const addPeerToView = (remoteStream) => {
     console.log("Add view to layout")
-    console.log(remoteStream)
-    let layer = document.querySelector(".layer")
 
-    const videoContainer = document.createElement("div")
-    videoContainer.className = "h-full flex flex-col justify-center"
+    const videoContainer = document.createElement("video")
+    let videoId = "remoteStream" + remoteStream.id.split("-")[0]
+    videoContainer.id = videoId
 
-    const video = document.createElement("video")
-    video.autoplay = true
-    video.srcObject = remoteStream
-    video.play()
+    setPeersHTML([...peersHTML, videoContainer.outerHTML])
+    console.log(videoContainer.outerHTML)
+    console.log("Create video tag")
 
-    videoContainer.appendChild(video)
-    // layer.appendChild(videoContainer)
+    setTimeout(() => {
+      updateLayoutRef.current()
+    }, 500)
 
-    peersHTML.push(videoContainer.innerHTML)
-    console.log(videoContainer.innerHTML)
-    updateLayoutRef.current()
+    setTimeout(() => {
+      console.log("Append video to video tag")
+      const video = document.querySelector("#" + videoId)
+      video.autoplay = true
+      video.srcObject = remoteStream
+      video.play()
+    }, 1000)
   }
 
   // initialize socket-io connection
@@ -526,31 +529,6 @@ function Meeting() {
     setIsOpenSideBar(isOpenAttend || isOpenChat)
   }, [isOpenAttend, isOpenChat])
 
-  // useEffect(() => {
-  //   console.log("Render layout")
-  //   console.log(document)
-  //   if (document.querySelector("#layout")) {
-  //     const layout = document.querySelector("#layout")
-  //     let layoutLength = layout.getBoundingClientRect().width
-
-  //     const parentLayout = document.querySelector("#parentLayout")
-  //     let parentLayoutLength = parentLayout.getBoundingClientRect().width
-
-  //     console.log("Layout length: " + layoutLength)
-  //     console.log("parentLayoutLength: " + parentLayoutLength)
-
-  //     if (layoutLength / parentLayoutLength == 9 / 16) {
-  //       if (!isOpenSideBar) {
-  //         updateLayoutRef.current()
-  //       }
-  //     } else {
-  //       if (isOpenSideBar) {
-  //         updateLayoutRef.current()
-  //       }
-  //     }
-  //   }
-  // })
-
   return (
     <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
       <div
@@ -572,12 +550,17 @@ function Meeting() {
           </div>
 
           {peersHTML.map((peerHTML) => {
-            return { peerHTML }
+            console.log("Render peer!!!")
+            return (
+              <div className="h-full flex flex-col justify-center">
+                {parse(peerHTML)}
+              </div>
+            )
           })}
 
-          {/* <div className="h-full flex flex-col justify-center">
+          <div className="h-full flex flex-col justify-center">
             <img src={require("../img/image1.jpg")} />
-          </div> */}
+          </div>
 
           {/* <div className="h-full flex justify-center">
             <video ref={localStreamRef} autoPlay />

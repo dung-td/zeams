@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-/* img {
+video {
   width: 100% !important;
-  height: auto !important;
-} */
+  height: 100% !important;
+}
 
 body {
   margin: 0;
