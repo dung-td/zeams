@@ -9,7 +9,7 @@ import {
   updateLocalStream,
   updateOtherPeers,
   addPeer,
-  selectOtherPeers
+  selectOtherPeers,
 } from "../redux/slices/ConnectionSlice"
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
 
@@ -412,9 +412,18 @@ function Meeting() {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
           }
-          //remoteStreamRef.current.srcObject = event.streams[0]
+
+          let videoId = "remoteStream" + otherPeers.current[index].id
+
+          console.log(videoId)
+
+          if (otherPeers.current[index].remoteStream === undefined) {
+            addRemoteStreamToView(videoId)
+          }
+
           otherPeers.current[index].remoteStream = remoteStream
-          addPeerToView(remoteStream)
+          updateRemoteStream(remoteStream, videoId)
+
           deepClonePeers()
         }
       )
@@ -478,22 +487,18 @@ function Meeting() {
     }
   }
 
-  const addPeerToView = (remoteStream) => {
-    console.log("Add view to layout")
-
+  const addRemoteStreamToView = (videoId) => {
     const videoContainer = document.createElement("video")
-    let videoId = "remoteStream" + remoteStream.id.split("-")[0]
     videoContainer.id = videoId
 
     dispatch(addPeer({ peer: videoContainer.outerHTML }))
-    // setPeersHTML([...peersHTML, videoContainer.outerHTML])
-    console.log(videoContainer.outerHTML)
-    console.log("Create video tag")
 
     setTimeout(() => {
       updateLayoutRef.current()
     }, 500)
+  }
 
+  const updateRemoteStream = (remoteStream, videoId) => {
     setTimeout(() => {
       console.log("Append video to video tag")
       const video = document.querySelector("#" + videoId)
@@ -549,7 +554,7 @@ function Meeting() {
           } flex flex-row  max-h-screen layer`}
         >
           <div className="h-full flex flex-col justify-center">
-            <video ref={localStreamRef} autoPlay muted/>
+            <video ref={localStreamRef} autoPlay muted />
           </div>
 
           {peers.map((peerHTML) => {
