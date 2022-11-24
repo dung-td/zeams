@@ -571,7 +571,7 @@ function Meeting() {
           } flex flex-row  max-h-screen layer`}
         >
           <div className="h-full flex flex-col justify-center">
-            <video ref={localStreamRef} autoPlay />
+            <video ref={localStreamRef} autoPlay muted />
           </div>
 
           {/* <div className="h-full flex flex-col justify-center">
