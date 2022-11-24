@@ -23,8 +23,16 @@ const servers = {
 }
 const mediaConstraints = {
   audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
+    mandatory: {
+      noiseSuppression: true,
+      echoCancellation: true,
+      googHighpassFilter: true,
+      googEchoCancellation: true,
+      googAutoGainControl: true,
+      googNoiseSuppression: true,
+      googTypingNoiseDetection: true,
+    },
+    optional: []
   },
   video: {
     frameRate: 60,
