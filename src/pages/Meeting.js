@@ -698,10 +698,12 @@ function Meeting() {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
 
+    console.log(videoElement.offsetHeight + "/" + videoElement.offsetWidth)
+
     async function start() {
       videoElement.onplaying = async () => {
-        canvasElement.height = videoElement.height
-        canvasElement.width = videoElement.width
+        canvasElement.height = videoElement.offsetHeight
+        canvasElement.width = videoElement.offsetWidth
 
         let lastTime = new Date()
 
@@ -746,8 +748,6 @@ function Meeting() {
       })
     }
   }, [otherPeers.current])
-
-  // applyBlur()
 
   return (
     <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
