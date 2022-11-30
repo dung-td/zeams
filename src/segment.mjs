@@ -1,64 +1,106 @@
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation"
+import background from "./img/background.jpg"
 
 let height, width
+let canvasCtx = undefined
+let backgroundImage = undefined
+let effectOption = ""
 
 const selfieSegmentation = new SelfieSegmentation({
   locateFile: (file) => {
     return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
   },
 })
+
 selfieSegmentation.setOptions({
   modelSelection: 1,
 })
 
-export async function segment(videoElement, canvasElement) {
-  width = videoElement.offsetHeight
-  height = videoElement.offsetWidth
+selfieSegmentation.onResults((results) => {
+  console.log(effectOption)
+  const background = document.getElementById("backgroundImage")
+  canvasCtx.save()
+  canvasCtx.beginPath()
 
-  canvasElement.height = height
-  canvasElement.width = width
-  const canvasCtx = canvasElement.getContext("2d")
+  canvasCtx.clearRect(0, 0, width, height)
 
-  selfieSegmentation.onResults((results) => {
-    canvasCtx.save()
-    canvasCtx.clearRect(
-      0,
-      0,
-      canvasElement.offsetWidth,
-      canvasElement.offsetHeight
-    )
-    canvasCtx.drawImage(
-      results.segmentationMask,
-      0,
-      0,
-      canvasElement.offsetWidth,
-      canvasElement.offsetHeight
-    )
+  canvasCtx.filter = "none"
+  canvasCtx.globalCompositeOperation = "source-over"
+  canvasCtx.drawImage(results.segmentationMask, 0, 0, width, height)
 
-    // Only overwrite existing pixels.
-    canvasCtx.globalCompositeOperation = "source-in"
-    canvasCtx.fillStyle = "#00FF00"
-    canvasCtx.fillRect(
-      0,
-      0,
-      canvasElement.offsetWidth,
-      canvasElement.offsetHeight
-    )
+  canvasCtx.globalCompositeOperation = "source-in"
+  canvasCtx.drawImage(results.image, 0, 0, width, height)
 
-    // Only overwrite missing pixels.
-    canvasCtx.globalCompositeOperation = "destination-atop"
-    canvasCtx.drawImage(
-      results.image,
-      0,
-      0,
-      canvasElement.offsetWidth,
-      canvasElement.offsetHeight
-    )
+  // Blur
+  switch (effectOption) {
+    case "background":
+      canvasCtx.filter = "none"
+      canvasCtx.globalCompositeOperation = "destination-over"
+      canvasCtx.drawImage(background, 0, 0, width, height)
+      break
+    case "blur":
+      canvasCtx.filter = "blur(10px)"
+      canvasCtx.globalCompositeOperation = "destination-over"
+      canvasCtx.drawImage(results.image, 0, 0, width, height)
+      break
+    default:
+      canvasCtx.globalCompositeOperation = "destination-over"
+      canvasCtx.drawImage(results.image, 0, 0, width, height)
+      break
+  }
+  canvasCtx.restore()
+  console.log("Done re-draw")
+})
 
-    canvasCtx.restore()
+async function segment(videoElement, canvasElement) {
+  console.log("Run segment")
+  console.log(
+    "Size: " + videoElement.offsetHeight + "/" + videoElement.offsetWidth
+  )
 
-    console.log("Done re-draw")
-  })
+  // canvasElement.height = videoElement.offsetHeight
+  // canvasElement.width = videoElement.offsetWidth
 
-  await selfieSegmentation.send({ image: videoElement })
+  if (canvasCtx == undefined) {
+    canvasCtx = canvasElement.getContext("2d")
+    height = canvasElement.offsetHeight
+    width = canvasElement.offsetWidth
+  } else {
+    await selfieSegmentation.send({ image: videoElement })
+  }
+}
+
+const handlePlaying = async (videoElement, canvasElement) => {
+  // canvasElement.height = videoElement.offsetHeight
+  // canvasElement.width = videoElement.offsetWidth
+
+  let lastTime = new Date()
+
+  async function getFrames() {
+    console.log(lastTime)
+
+    const now = videoElement.currentTime
+    if (now > lastTime) {
+      const fps = (1 / (now - lastTime)).toFixed()
+      await segment(videoElement, canvasElement)
+    }
+    lastTime = now
+
+    setTimeout(() => {
+      requestAnimationFrame(getFrames)
+    }, 5000)
+  }
+
+  await getFrames()
+}
+
+export async function start(videoElement, canvasElement, option) {
+  console.log(option)
+  effectOption = option
+  videoElement.addEventListener(
+    "playing",
+    handlePlaying(videoElement, canvasElement)
+  )
+
+  videoElement.play()
 }

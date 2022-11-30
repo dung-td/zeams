@@ -8,7 +8,7 @@ import "@tensorflow/tfjs-backend-webgl"
 import * as bodySegmentation from "@tensorflow-models/body-segmentation"
 import "@mediapipe/selfie_segmentation"
 import "@tensorflow/tfjs-converter"
-import { segment } from "../segment.mjs"
+import { segment, start } from "../segment.mjs"
 
 import { connection } from "../utils"
 import {
@@ -19,6 +19,9 @@ import {
   selectOtherPeers,
 } from "../redux/slices/ConnectionSlice"
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import { Chat } from "../components/Chat.js"
+import { Attend } from "../components/Attend.js"
+import { Background } from "../components/setting/Background.js"
 
 const isVoiceOnly = false
 const servers = {
@@ -38,8 +41,8 @@ const mediaConstraints = {
   video: {
     frameRate: 60,
     facingMode: "user", // 'user'
-    width: { min: 600, ideal: 1920, max: 600 },
-    height: { min: 300, ideal: 1080, max: 400 },
+    width: { min: 600, ideal: 1920, max: 1920 },
+    height: { min: 300, ideal: 1080, max: 1080 },
   },
 }
 const sessionConstraints = {
@@ -529,199 +532,23 @@ function Meeting() {
   const renderSidebar = (param) => {
     switch (param) {
       case "chat":
-        return (
-          <div className="flex flex-col bg-white p-4 rounded-md h-full justify-between">
-            <div className="w-full">
-              <p className="font-bold text-xl">Chat</p>
-              <div className="my-4">
-                <input
-                  type="text"
-                  id="first_name"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Search for people"
-                  required
-                />
-              </div>
-              <div>
-                <div className="flex flex-row items-center justify-between">
-                  <div className="flex flex-row mt-4 items-center">
-                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                    <p className="font-bold"> Tống Đức Dũng</p>
-                    <div className="ml-4 flex flex-row items-center">
-                      <p>9:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p> Xin chào mọi người!</p>
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-row items-center justify-between">
-                  <div className="flex flex-row mt-4 items-center">
-                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                    <p className="font-bold"> MCD</p>
-                    <div className="ml-4 flex flex-row items-center">
-                      <p>9:00 PM</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p> Hi chào bạn!</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="relative">
-              <input
-                type="text"
-                className="bg-gray-50 border pr-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                placeholder="Enter message to send to everyone"
-              />
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-auto">
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"
-                  ></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-        )
+        return <Chat />
       case "attend":
-        return (
-          <div className="flex bg-white p-4 rounded-md h-full">
-            <div className="w-full">
-              <p className="font-bold text-xl">Participant</p>
-              <div className=" mt-4">
-                <input
-                  type="text"
-                  id="first_name"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  placeholder="Search for people"
-                  required
-                />
-              </div>
-              <div className="flex flex-row mt-4 items-center justify-between">
-                <div className="flex flex-row mt-4 items-center">
-                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                  <p> Tống Đức Dũng</p>
-                </div>
-                <div className="flex flex-row mt-4 items-center gap-1">
-                  <span className="material-icons hover:cursor-pointer">
-                    mic_off
-                  </span>
-                  <span className="material-icons hover:cursor-pointer">
-                    videocam_off
-                  </span>
-                </div>
-              </div>
-              <div className="flex flex-row mt-4 items-center justify-between">
-                <div className="flex flex-row mt-4 items-center">
-                  <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                  <p> Tống Đức Dũng</p>
-                </div>
-                <div className="flex flex-row mt-4 items-center gap-1">
-                  <span className="material-icons hover:cursor-pointer">
-                    mic_off
-                  </span>
-                  <span className="material-icons hover:cursor-pointer">
-                    videocam_off
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        return <Attend />
+      case "background":
+        return <Background applyEffect={applyEffect} />
       default:
-        return (
-          <div className="flex bg-white p-4 rounded-md h-full">
-            <div className="w-full">
-              <p className="font-bold text-md">Background</p>
-              <div className="mt-2">
-                <video
-                  className="rounded-md localStreamRef"
-                  ref={localStreamRef}
-                  autoPlay
-                  muted
-                />
-              </div>
-              <div className="mt-4 font-medium">
-                <p>No effect & blur</p>
-                <div className="flex flex-row flex-nowrap justify-center items-center gap-4 px-2 mt-2">
-                  <div className="flex w-4/12 text-center border border-gray-600 p-4 rounded-md justify-center items-center hover:text-blue-400 hover:border-blue-400 hover:cursor-pointer">
-                    <span className="material-icons ">block</span>
-                  </div>
-
-                  <div
-                    className="flex w-4/12 text-center border border-gray-600 p-4 rounded-md justify-center items-center hover:text-blue-400 hover:border-blue-400 hover:cursor-pointer"
-                    onClick={() => {
-                      applyBlur()
-                    }}
-                  >
-                    <span className="material-icons ">blur_on</span>
-                  </div>
-
-                  <div className="flex w-4/12 text-center border border-gray-600 p-4 rounded-md justify-center items-center hover:text-blue-400 hover:border-blue-400 hover:cursor-pointer">
-                    <span className="material-icons ">blur_off</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4 font-medium">
-                <p>Background</p>
-                <div className="flex flex-row flex-nowrap justify-center items-center gap-4 px-2 mt-2">
-                  <div className="flex w-4/12 text-center border border-gray-600 rounded-md justify-center items-center hover:text-blue-400 hover:border-blue-400 hover:cursor-pointer">
-                    <img
-                      className="rounded-md"
-                      src={require("../img/background.jpg")}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
+        return null
     }
   }
 
-  const applyBlur = async () => {
+  const applyEffect = async (option) => {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
 
-    console.log(videoElement.offsetHeight + "/" + videoElement.offsetWidth)
-
-    async function start() {
-      videoElement.onplaying = async () => {
-        canvasElement.height = videoElement.offsetHeight
-        canvasElement.width = videoElement.offsetWidth
-
-        let lastTime = new Date()
-
-        async function getFrames() {
-          const now = videoElement.currentTime
-          if (now > lastTime) {
-            const fps = (1 / (now - lastTime)).toFixed()
-            await segment(videoElement, canvasElement)
-          }
-          lastTime = now
-          requestAnimationFrame(getFrames)
-        }
-
-        await getFrames()
-      }
-    }
-
-    start().catch((err) => console.error(err))
+    start(videoElement, canvasElement, option).catch((err) =>
+      console.error(err)
+    )
   }
 
   // initialize socket-io connection
@@ -753,7 +580,7 @@ function Meeting() {
     <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
       <div
         id="parentLayout"
-        className="w-full flex flex-row min-h-screen p-4 pb-16 justify-center"
+        className="w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
       >
         <PackedGrid
           id="layout"
@@ -767,7 +594,13 @@ function Meeting() {
         >
           <div className="h-full p-2">
             <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
-              <video id="localStream" ref={localStreamRef} autoPlay muted />
+              <video
+                id="localStream"
+                className="localStreamRef"
+                ref={localStreamRef}
+                autoPlay
+                muted
+              />
             </div>
           </div>
 
@@ -781,21 +614,19 @@ function Meeting() {
             )
           })}
 
-          <div className="h-full p-2">
-            <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
-              <img id="imageTesting" src={require("../img/image1.jpg")} />
-            </div>
-          </div>
-
-          <div className="h-full p-2">
+          {/* <div className="h-full p-2">
             <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
               <canvas id="canvasTesting" />
             </div>
-          </div>
+          </div> */}
         </PackedGrid>
 
         {/* Sidebar */}
-        <div className={sidebar !== "" ? "w-3/12" : "hidden"}>
+        <div
+          className={
+            sidebar !== "" ? "w-3/12 flex flex-row  max-h-screen" : "hidden"
+          }
+        >
           {renderSidebar(sidebar)}
         </div>
       </div>
@@ -807,7 +638,7 @@ function Meeting() {
         <div className="text-white font-xl font-bold ">{roomId}</div>
 
         <div className="flex flex-row gap-4">
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span
               className="material-icons text-white"
               onClick={() => {
@@ -816,28 +647,45 @@ function Meeting() {
             >
               {isMicOn ? "mic" : "mic_off"}
             </span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span
-              className="material-icons text-white mr-2"
+              className="material-icons text-white"
               onClick={() => {
                 setIsCamOn(!isCamOn)
               }}
             >
               {isCamOn ? "videocam" : "videocam_off"}
             </span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
 
-          <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
+          <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-4 hover:bg-red-700 hover:cursor-pointer">
             <p className="text-white">End Meeting</p>
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+
+          <div
+            className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600"
+            onClick={() => {
+              if (sidebar == "background") {
+                setSidebar("")
+              } else {
+                setSidebar("background")
+              }
+
+              setTimeout(() => {
+                updateLayoutRef.current()
+              }, 1)
+            }}
+          >
+            <span className="material-icons text-white ">more_vert</span>
+          </div>
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span className="material-icons text-white mr-2">screen_share</span>
             <span className="material-icons text-white">expand_less</span>
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span className="material-icons text-white mr-2">
               radio_button_checked
             </span>
