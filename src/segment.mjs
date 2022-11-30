@@ -50,6 +50,8 @@ selfieSegmentation.onResults((results) => {
   }
   canvasCtx.restore()
   console.log("Done re-draw")
+
+  // Handle after draw
 })
 
 async function segment(videoElement, canvasElement) {
@@ -85,10 +87,10 @@ const handlePlaying = async (videoElement, canvasElement) => {
       await segment(videoElement, canvasElement)
     }
     lastTime = now
+    requestAnimationFrame(getFrames)
 
-    setTimeout(() => {
-      requestAnimationFrame(getFrames)
-    }, 5000)
+    // setTimeout(() => {
+    // }, 5000)
   }
 
   await getFrames()
@@ -103,4 +105,9 @@ export async function start(videoElement, canvasElement, option) {
   )
 
   videoElement.play()
+}
+
+export function changeSize(hei, wid) {
+  height = hei
+  width = wid
 }

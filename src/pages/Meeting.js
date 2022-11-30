@@ -8,7 +8,7 @@ import "@tensorflow/tfjs-backend-webgl"
 import * as bodySegmentation from "@tensorflow-models/body-segmentation"
 import "@mediapipe/selfie_segmentation"
 import "@tensorflow/tfjs-converter"
-import { segment, start } from "../segment.mjs"
+import { changeSize, segment, start } from "../segment.mjs"
 
 import { connection } from "../utils"
 import {
@@ -58,6 +58,7 @@ function Meeting() {
 
   const peers = useSelector(selectOtherPeers)
   const localStreamRef = useRef()
+  const processedLocalStreamRef = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
@@ -536,7 +537,9 @@ function Meeting() {
       case "attend":
         return <Attend />
       case "background":
-        return <Background applyEffect={applyEffect} />
+        return (
+          <Background applyEffect={applyEffect} changeSize={changeEffectSize} />
+        )
       default:
         return null
     }
@@ -549,6 +552,31 @@ function Meeting() {
     start(videoElement, canvasElement, option).catch((err) =>
       console.error(err)
     )
+  }
+
+  const changeEffectSize = () => {
+    const videoElement = document.getElementsByClassName("localStreamRef")[0]
+    const canvasElement = document.getElementById("canvasTesting")
+
+    let height = videoElement.offsetHeight
+    let width = videoElement.offsetWidth
+    changeSize(width, height)
+
+    processedLocalStreamRef.current.srcObject = canvasElement.captureStream(30)
+
+    const processedVideoElement = document.getElementById(
+      "processedLocalStream"
+    )
+
+    // Replace track after process for other peers
+    otherPeers.current.forEach((peer) => {
+      console.log("REPLACE TRACK")
+      peer.peerConnection.getSenders().forEach((sender) => {
+        sender.replaceTrack(
+          processedLocalStreamRef.current.srcObject.getVideoTracks()[0]
+        )
+      })
+    })
   }
 
   // initialize socket-io connection
@@ -614,11 +642,17 @@ function Meeting() {
             )
           })}
 
-          {/* <div className="h-full p-2">
+          <div className="h-full p-2">
             <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
-              <canvas id="canvasTesting" />
+              <video
+                id="processedLocalStream"
+                className="processedLocalStream"
+                ref={processedLocalStreamRef}
+                autoPlay
+                muted
+              />
             </div>
-          </div> */}
+          </div>
         </PackedGrid>
 
         {/* Sidebar */}
