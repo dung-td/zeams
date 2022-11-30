@@ -1,13 +1,15 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { flushSync } from "react-dom"
+import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
 import { connection } from "../utils"
 import {
   selectLocalStream,
   updateLocalStream,
   updateOtherPeers,
+  addPeer,
+  selectOtherPeers,
 } from "../redux/slices/ConnectionSlice"
 import { selectUserId } from "../redux/slices/AuthenticationSlice"
 
@@ -44,6 +46,7 @@ function Meeting() {
   const { roomRef } = useParams()
   const dispatch = useDispatch()
 
+  const peers = useSelector(selectOtherPeers)
   const localStreamRef = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
@@ -357,7 +360,6 @@ function Meeting() {
   }
 
   const createPeerConnection = (index) => {
-    console.log("Index peer: " + index)
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
 
@@ -409,9 +411,18 @@ function Meeting() {
             console.log("event.track")
             remoteStream = new MediaStream([event.track])
           }
-          //remoteStreamRef.current.srcObject = event.streams[0]
+
+          let videoId = "remoteStream" + otherPeers.current[index].id
+
+          console.log(videoId)
+
+          if (otherPeers.current[index].remoteStream === undefined) {
+            addRemoteStreamToView(videoId)
+          }
+
           otherPeers.current[index].remoteStream = remoteStream
-          addPeerToView(remoteStream)
+          updateRemoteStream(remoteStream, videoId)
+
           deepClonePeers()
         }
       )
@@ -475,21 +486,25 @@ function Meeting() {
     }
   }
 
-  const addPeerToView = (remoteStream) => {
-    console.log("Add view to layout")
-    console.log(remoteStream)
-    let layer = document.querySelector(".layer")
+  const addRemoteStreamToView = (videoId) => {
+    const videoContainer = document.createElement("video")
+    videoContainer.id = videoId
 
-    const videoContainer = document.createElement("div")
-    videoContainer.className = "h-full flex flex-col rounded justify-center object-cover overflow-hidden"
+    dispatch(addPeer({ peer: videoContainer.outerHTML }))
 
-    const video = document.createElement("video")
-    video.autoplay = true
-    video.srcObject = remoteStream
-    video.play()
+    setTimeout(() => {
+      updateLayoutRef.current()
+    }, 500)
+  }
 
-    videoContainer.appendChild(video)
-    layer.appendChild(videoContainer)
+  const updateRemoteStream = (remoteStream, videoId) => {
+    setTimeout(() => {
+      console.log("Append video to video tag")
+      const video = document.querySelector("#" + videoId)
+      video.autoplay = true
+      video.srcObject = remoteStream
+      video.play()
+    }, 1000)
   }
 
   // initialize socket-io connection
@@ -521,31 +536,6 @@ function Meeting() {
     setIsOpenSideBar(isOpenAttend || isOpenChat)
   }, [isOpenAttend, isOpenChat])
 
-  // useEffect(() => {
-  //   console.log("Render layout")
-  //   console.log(document)
-  //   if (document.querySelector("#layout")) {
-  //     const layout = document.querySelector("#layout")
-  //     let layoutLength = layout.getBoundingClientRect().width
-
-  //     const parentLayout = document.querySelector("#parentLayout")
-  //     let parentLayoutLength = parentLayout.getBoundingClientRect().width
-
-  //     console.log("Layout length: " + layoutLength)
-  //     console.log("parentLayoutLength: " + parentLayoutLength)
-
-  //     if (layoutLength / parentLayoutLength == 9 / 16) {
-  //       if (!isOpenSideBar) {
-  //         updateLayoutRef.current()
-  //       }
-  //     } else {
-  //       if (isOpenSideBar) {
-  //         updateLayoutRef.current()
-  //       }
-  //     }
-  //   }
-  // })
-
   return (
     <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
       <div
@@ -563,8 +553,17 @@ function Meeting() {
           } flex flex-row  max-h-screen layer`}
         >
           <div className="h-full flex flex-col justify-center">
-            <video ref={localStreamRef} autoPlay />
+            <video ref={localStreamRef} autoPlay muted />
           </div>
+
+          {peers.map((peerHTML) => {
+            console.log("LENGTH: " + peers.length)
+            return (
+              <div className="h-full flex flex-col justify-center object-cover overflow-hidden">
+                {parse(peerHTML)}
+              </div>
+            )
+          })}
 
           {/* <div className="h-full flex flex-col justify-center">
             <img src={require("../img/image1.jpg")} />
