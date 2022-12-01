@@ -17,7 +17,6 @@ selfieSegmentation.setOptions({
 })
 
 selfieSegmentation.onResults((results) => {
-  console.log(effectOption)
   const background = document.getElementById("backgroundImage")
   canvasCtx.save()
   canvasCtx.beginPath()
@@ -49,8 +48,6 @@ selfieSegmentation.onResults((results) => {
       break
   }
   canvasCtx.restore()
-  console.log("Done re-draw")
-
   // Handle after draw
 })
 
@@ -79,8 +76,6 @@ const handlePlaying = async (videoElement, canvasElement) => {
   let lastTime = new Date()
 
   async function getFrames() {
-    console.log(lastTime)
-
     const now = videoElement.currentTime
     if (now > lastTime) {
       const fps = (1 / (now - lastTime)).toFixed()
@@ -97,7 +92,6 @@ const handlePlaying = async (videoElement, canvasElement) => {
 }
 
 export async function start(videoElement, canvasElement, option) {
-  console.log(option)
   effectOption = option
   videoElement.addEventListener(
     "playing",

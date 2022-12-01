@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
 import "@tensorflow/tfjs-core"
@@ -8,8 +9,8 @@ import "@tensorflow/tfjs-backend-webgl"
 import * as bodySegmentation from "@tensorflow-models/body-segmentation"
 import "@mediapipe/selfie_segmentation"
 import "@tensorflow/tfjs-converter"
-import { changeSize, segment, start } from "../segment.mjs"
 
+import { changeSize, segment, start } from "../segment.mjs"
 import { connection } from "../utils"
 import {
   selectLocalStream,
@@ -22,35 +23,18 @@ import { selectUserId } from "../redux/slices/AuthenticationSlice"
 import { Chat } from "../components/Chat.js"
 import { Attend } from "../components/Attend.js"
 import { Background } from "../components/setting/Background.js"
+import {
+  DISPLAY_MEDIA_CONSTRAINTS,
+  MEDIA_CONSTRAINTS,
+  SERVERS,
+  SESSION_CONSTRAINTS,
+} from "../constants/index.js"
 
 const isVoiceOnly = false
-const servers = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
-
-  iceCandidatePoolSize: 10,
-}
-const mediaConstraints = {
-  audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-  },
-  video: {
-    frameRate: 60,
-    facingMode: "user", // 'user'
-    width: { min: 600, ideal: 1920, max: 1920 },
-    height: { min: 300, ideal: 1080, max: 1080 },
-  },
-}
-const sessionConstraints = {
-  offerToReceiveAudio: true,
-  offerToReceiveVideo: true,
-}
 
 function Meeting() {
+  const navigate = useNavigate()
+
   const { roomId } = useParams()
   const { action } = useParams()
   const { roomRef } = useParams()
@@ -68,8 +52,9 @@ function Meeting() {
 
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
+  const [isUsingEffect, setIsUsingEffect] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
-  const [sidebar, setSidebar] = useState("background")
+  const [sidebar, setSidebar] = useState("")
 
   const [initialising, setInitialising] = useState(true)
   const [camAmount, setCamAmount] = useState()
@@ -101,7 +86,7 @@ function Meeting() {
   }
 
   const preLoadLocalStream = () => {
-    navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
       localStreamRef.current.srcObject = stream
     })
@@ -299,7 +284,7 @@ function Meeting() {
               }
 
               otherPeers.current[index].peerConnection
-                ?.createAnswer(sessionConstraints)
+                ?.createAnswer(SESSION_CONSTRAINTS)
                 .then((answerDescription) => {
                   otherPeers.current[index].peerConnection?.setLocalDescription(
                     answerDescription
@@ -359,6 +344,7 @@ function Meeting() {
           break
         case "hang-up":
           const index = findOfferIndex(obj)
+          removeRemoteStreamFromView(otherPeers.current[index].peerConnection)
           handleCleanUpConnection(index)
           break
         default:
@@ -373,9 +359,9 @@ function Meeting() {
 
   const createPeerConnection = (index) => {
     if (!otherPeers.current[index].peerConnection) {
-      otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
+      otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
 
-      navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
+      navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
         // dispatch(updateLocalStream({ localStream: stream }))
         localStreamRef.current.srcObject = stream
         stream?.getTracks().forEach((track) => {
@@ -449,7 +435,7 @@ function Meeting() {
             return
           }
           otherPeers.current[index].peerConnection
-            ?.createOffer(sessionConstraints)
+            ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
               otherPeers.current[index].peerConnection?.setLocalDescription(
                 offerDescription
@@ -538,7 +524,10 @@ function Meeting() {
         return <Attend />
       case "background":
         return (
-          <Background applyEffect={applyEffect} changeSize={changeEffectSize} />
+          <Background
+            applyEffect={applyEffect}
+            changeSize={changeEffectSizeAndApply}
+          />
         )
       default:
         return null
@@ -554,19 +543,26 @@ function Meeting() {
     )
   }
 
-  const changeEffectSize = () => {
+  const changeEffectSizeAndApply = () => {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
 
-    let height = videoElement.offsetHeight
-    let width = videoElement.offsetWidth
-    changeSize(width, height)
+    changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
+
+    canvasElement.height = videoElement.offsetHeight
+    canvasElement.width = videoElement.offsetWidth
 
     processedLocalStreamRef.current.srcObject = canvasElement.captureStream(30)
 
     const processedVideoElement = document.getElementById(
       "processedLocalStream"
     )
+
+    const processedLocalStreamElement = document.getElementById(
+      "processedLocalStream"
+    )
+
+    processedLocalStreamElement.classList.add("z-10")
 
     // Replace track after process for other peers
     otherPeers.current.forEach((peer) => {
@@ -577,6 +573,42 @@ function Meeting() {
         )
       })
     })
+  }
+
+  const startCaptureScreen = () => {
+    navigator.mediaDevices
+      .getDisplayMedia(DISPLAY_MEDIA_CONSTRAINTS)
+      .then((stream) => {
+        console.log("Start sharing screen")
+        setIsSharing(true)
+        localStreamRef.current.srcObject = stream
+
+        // replace old tracks in other peers with latest tracks
+        otherPeers.current.forEach((peer) => {
+          console.log("REPLACE TRACK")
+          peer.peerConnection.getSenders().forEach((sender) => {
+            sender.replaceTrack(stream.getVideoTracks()[0])
+          })
+        })
+
+        stream.oninactive = function () {
+          console.log("Stop sharing screen")
+          setIsSharing(false)
+          navigator.mediaDevices
+            .getUserMedia(MEDIA_CONSTRAINTS)
+            .then((stream) => {
+              localStreamRef.current.srcObject = stream
+
+              // replace old tracks in other peers with latest tracks
+              otherPeers.current.forEach((peer) => {
+                console.log("REPLACE TRACK")
+                peer.peerConnection.getSenders().forEach((sender) => {
+                  sender.replaceTrack(stream.getVideoTracks()[0])
+                })
+              })
+            })
+        }
+      })
   }
 
   // initialize socket-io connection
@@ -620,12 +652,19 @@ function Meeting() {
             sidebar === "" ? "w-9/12 " : "w-full "
           } flex flex-row  max-h-screen layer`}
         >
-          <div className="h-full p-2">
-            <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
+          <div id="localStreamRefDiv" className="h-full p-2 ">
+            <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
               <video
                 id="localStream"
-                className="localStreamRef"
+                className="localStreamRef absolute"
                 ref={localStreamRef}
+                autoPlay
+                muted
+              />
+              <video
+                id="processedLocalStream"
+                className="processedLocalStream absolute"
+                ref={processedLocalStreamRef}
                 autoPlay
                 muted
               />
@@ -641,18 +680,6 @@ function Meeting() {
               </div>
             )
           })}
-
-          <div className="h-full p-2">
-            <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center">
-              <video
-                id="processedLocalStream"
-                className="processedLocalStream"
-                ref={processedLocalStreamRef}
-                autoPlay
-                muted
-              />
-            </div>
-          </div>
         </PackedGrid>
 
         {/* Sidebar */}
@@ -695,8 +722,20 @@ function Meeting() {
             {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
 
-          <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-4 hover:bg-red-700 hover:cursor-pointer">
-            <p className="text-white">End Meeting</p>
+          <div
+            className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md hover:bg-red-700 hover:cursor-pointer"
+            onClick={() => {
+              console.log("Leaving...")
+              sendToServer({
+                type: "hang-up",
+                roomId: roomId,
+                roomRef: roomRef,
+                sender: userId,
+              })
+              navigate(`/`)
+            }}
+          >
+            <p className="text-white">Leave Meeting</p>
           </div>
 
           <div
@@ -715,9 +754,16 @@ function Meeting() {
           >
             <span className="material-icons text-white ">more_vert</span>
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
-            <span className="material-icons text-white mr-2">screen_share</span>
-            <span className="material-icons text-white">expand_less</span>
+          <div
+            className={`${
+              isSharing ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600`}
+            onClick={() => {
+              startCaptureScreen()
+            }}
+          >
+            <span className="material-icons text-white">screen_share</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
           <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span className="material-icons text-white mr-2">
@@ -731,7 +777,7 @@ function Meeting() {
           <div
             className={`${
               sidebar === "attend" ? "bg-[#0e78f8]" : "bg-[#242736]"
-            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
+            } justify-center flex items-center p-2 rounded-full border border-gray-600 hover:cursor-pointer`}
             onClick={() => {
               if (sidebar == "attend") {
                 setSidebar("")
@@ -744,13 +790,13 @@ function Meeting() {
               }, 1)
             }}
           >
-            <span className="material-icons text-white mr-2">people</span>
-            <span className="material-icons text-white">expand_less</span>
+            <span className="material-icons text-white">people</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
           <div
             className={`${
               sidebar === "chat" ? "bg-[#0e78f8]" : "bg-[#242736]"
-            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
+            } justify-center flex items-center p-2 rounded-full border border-gray-600 hover:cursor-pointer`}
             onClick={() => {
               if (sidebar == "chat") {
                 setSidebar("")
@@ -764,7 +810,7 @@ function Meeting() {
             }}
           >
             <span className="material-icons text-white">question_answer</span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
         </div>
       </div>
