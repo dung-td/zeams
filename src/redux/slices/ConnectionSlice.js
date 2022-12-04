@@ -17,12 +17,16 @@ export const connectionSlice = createSlice({
     },
     addPeer: (state, action) => {
       state.otherPeers = [...state.otherPeers, action.payload.peer]
-    }
+    },
+    removePeer: (state, action) => {
+      state.otherPeers.splice(action.payload.index, 1)
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { updateLocalStream, updateOtherPeers, addPeer } = connectionSlice.actions
+export const { updateLocalStream, updateOtherPeers, addPeer, removePeer } =
+  connectionSlice.actions
 
 export const selectOtherPeers = (state) => state.connection.otherPeers
 export const selectLocalStream = (state) => state.connection.localStream

@@ -3,8 +3,10 @@ import background from "./img/background.jpg"
 
 let height, width
 let canvasCtx = undefined
-let backgroundImage = undefined
+let backgroundImg = undefined
 let effectOption = ""
+
+let videoElement = undefined
 
 const selfieSegmentation = new SelfieSegmentation({
   locateFile: (file) => {
@@ -17,7 +19,6 @@ selfieSegmentation.setOptions({
 })
 
 selfieSegmentation.onResults((results) => {
-  const background = document.getElementById("backgroundImage")
   canvasCtx.save()
   canvasCtx.beginPath()
 
@@ -33,6 +34,7 @@ selfieSegmentation.onResults((results) => {
   // Blur
   switch (effectOption) {
     case "background":
+      const background = document.getElementById(backgroundImg)
       canvasCtx.filter = "none"
       canvasCtx.globalCompositeOperation = "destination-over"
       canvasCtx.drawImage(background, 0, 0, width, height)
@@ -48,7 +50,6 @@ selfieSegmentation.onResults((results) => {
       break
   }
   canvasCtx.restore()
-  // Handle after draw
 })
 
 async function segment(videoElement, canvasElement) {
@@ -104,4 +105,10 @@ export async function start(videoElement, canvasElement, option) {
 export function changeSize(hei, wid) {
   height = hei
   width = wid
+}
+
+export function setBackground(backgroundImageId) {
+  console.log("Background: " + backgroundImageId)
+
+  backgroundImg = backgroundImageId
 }
