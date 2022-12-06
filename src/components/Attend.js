@@ -1,6 +1,7 @@
 import React from "react"
 
-export const Attend = () => {
+export const Attend = (props) => {
+  console.log(props)
   return (
     <div className="flex flex-col bg-white p-4 rounded-md h-full w-full">
       <div className="w-full">
@@ -20,7 +21,7 @@ export const Attend = () => {
         <div className="flex flex-row mt-4 items-center justify-between">
           <div className="flex flex-row mt-4 items-center">
             <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-            <p> Tống Đức Dũng</p>
+            <p>{props.local}</p>
           </div>
           <div className="flex flex-row mt-4 items-center gap-1">
             <span className="material-icons hover:cursor-pointer">mic_off</span>
@@ -29,18 +30,27 @@ export const Attend = () => {
             </span>
           </div>
         </div>
-        <div className="flex flex-row mt-4 items-center justify-between">
-          <div className="flex flex-row mt-4 items-center">
-            <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-            <p> Tống Đức Dũng</p>
-          </div>
-          <div className="flex flex-row mt-4 items-center gap-1">
-            <span className="material-icons hover:cursor-pointer">mic_off</span>
-            <span className="material-icons hover:cursor-pointer">
-              videocam_off
-            </span>
-          </div>
-        </div>
+        {props.otherPeers.map((peer, index) => {
+          return (
+            <div
+              key={peer.id}
+              className="flex flex-row mt-4 items-center justify-between"
+            >
+              <div className="flex flex-row mt-4 items-center">
+                <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
+                <p>{peer.id}</p>
+              </div>
+              <div className="flex flex-row mt-4 items-center gap-1">
+                <span className="material-icons hover:cursor-pointer">
+                  mic_off
+                </span>
+                <span className="material-icons hover:cursor-pointer">
+                  videocam_off
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

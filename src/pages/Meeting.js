@@ -47,6 +47,7 @@ function Meeting() {
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
+  let userName = "dungtd"
   const [others, setOthers] = useState([])
   const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
@@ -79,7 +80,7 @@ function Meeting() {
     for (let i = 0; i < otherPeers.current.length; i++) {
       const peer = otherPeers.current[i]
 
-      if (peer.id === msg.sender) {
+      if (peer.id === msg.sender.id) {
         result = i
         break
       }
@@ -178,7 +179,10 @@ function Meeting() {
       roomId: roomId,
       roomRef: roomRef,
       data: {
-        sender: userId,
+        sender: {
+          id: userId,
+          name: userName,
+        },
       },
       create: action === "in" ? false : true,
     })
@@ -190,14 +194,15 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver === userId) {
+          if (obj.data.receiver != null && obj.data.receiver.id === userId) {
             setDocRef(obj.data.docRef)
 
             let arr = []
             obj.data.participants.forEach((person) => {
-              if (person != userId) {
+              if (person.id != userId) {
                 arr.push({
-                  id: person,
+                  id: person.id,
+                  name: person.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -209,12 +214,13 @@ function Meeting() {
           break
         case "offer":
           try {
-            if (obj.receiver == userId) {
+            if (obj.receiver.id == userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -258,7 +264,10 @@ function Meeting() {
                   sendToServer({
                     type: "answer",
                     roomId: roomId,
-                    sender: userId,
+                    sender: {
+                      id: userId,
+                      name: userName,
+                    },
                     receiver: otherPeers.current[index]?.id,
                     data: answerDescription,
                   })
@@ -272,7 +281,8 @@ function Meeting() {
 
             if (check < 0) {
               otherPeers.current.push({
-                id: obj.sender,
+                id: obj.sender.id,
+                name: obj.sender.name,
                 remoteStream: undefined,
                 peerConnection: undefined,
               })
@@ -293,7 +303,8 @@ function Meeting() {
             ) {
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -355,7 +366,10 @@ function Meeting() {
             sendToServer({
               type: "ice-candidate",
               roomId: roomId,
-              sender: userId,
+              sender: {
+                id: userId,
+                name: userName,
+              },
               receiver: otherPeers.current[index].id,
               data: event.candidate,
             })
@@ -414,7 +428,10 @@ function Meeting() {
               sendToServer({
                 type: "offer",
                 roomId: roomId,
-                sender: userId,
+                sender: {
+                  id: userId,
+                  name: userName,
+                },
                 receiver: otherPeers.current[index].id,
                 data: offerDescription,
               })
@@ -489,7 +506,7 @@ function Meeting() {
       case "chat":
         return <Chat />
       case "attend":
-        return <Attend />
+        return <Attend otherPeers={otherPeers.current} local={userId} />
       case "background":
         return (
           <Background
@@ -699,7 +716,10 @@ function Meeting() {
                 type: "hang-up",
                 roomId: roomId,
                 roomRef: roomRef,
-                sender: userId,
+                sender: {
+                  id: userId,
+                  name: userName,
+                },
               })
               navigate(`/`)
               window.reload()
