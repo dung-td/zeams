@@ -214,7 +214,7 @@ function Meeting() {
           break
         case "offer":
           try {
-            if (obj.receiver.id == userId) {
+            if (obj.receiver == userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
@@ -299,7 +299,7 @@ function Meeting() {
 
             if (
               obj.receiver == userId &&
-              obj.sender == otherPeers.current[check].id
+              obj.sender.id == otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
