@@ -38,7 +38,7 @@ export const Attend = (props) => {
             >
               <div className="flex flex-row mt-4 items-center">
                 <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                <p>{peer.id}</p>
+                <p>{peer.name}</p>
               </div>
               <div className="flex flex-row mt-4 items-center gap-1">
                 <span className="material-icons hover:cursor-pointer">

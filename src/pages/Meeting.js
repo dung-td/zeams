@@ -20,7 +20,10 @@ import {
   selectOtherPeers,
   removePeer,
 } from "../redux/slices/ConnectionSlice"
-import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import {
+  selectUserId,
+  selectUsername,
+} from "../redux/slices/AuthenticationSlice"
 import { Chat } from "../components/Chat.js"
 import { Attend } from "../components/Attend.js"
 import { Background } from "../components/setting/Background.js"
@@ -47,7 +50,7 @@ function Meeting() {
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
-  let userName = "dungtd"
+  let userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
   const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
@@ -194,11 +197,12 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver.id === userId) {
+          if (obj.data.receiver != null && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
 
             let arr = []
             obj.data.participants.forEach((person) => {
+              console.log(obj.data)
               if (person.id != userId) {
                 arr.push({
                   id: person.id,
@@ -614,6 +618,7 @@ function Meeting() {
   // Handle create peerConnection for other peers
   useEffect(() => {
     if (otherPeers.current.length > 0) {
+      console.log("User joined, start creating peers!")
       otherPeers.current.forEach((peer, index) => {
         if (!peer.peerConnection) {
           createPeerConnection(index)

@@ -1,8 +1,12 @@
 import { useRef, useState, useEffect } from "react"
-import { useSelector } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { Routes, Route, useNavigate } from "react-router-dom"
 
-import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import {
+  selectUserId,
+  selectUsername,
+  setUsername,
+} from "../redux/slices/AuthenticationSlice"
 import { generateRoomId } from "../utils"
 
 const mediaConstraints = {
@@ -16,11 +20,13 @@ const mediaConstraints = {
 
 function CreatRoom() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const localStreamRef = useRef()
   const [roomId, setRoomId] = useState("")
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
   const userId = useSelector(selectUserId)
+  const displayName = useSelector(selectUsername)
 
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
@@ -56,12 +62,32 @@ function CreatRoom() {
     }
   }, [isCamOn])
 
+  const setDisplayName = (username) => {
+    dispatch(
+      setUsername({
+        username: username,
+      })
+    )
+  }
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="p-4">
-        <p className="text-white text-xl">
+      <div className="p-4 w-2/12">
+        <p className="text-white text-xl text-center">
           Meeting code: <span>{roomId}</span>
         </p>
+
+        <input
+          value={displayName}
+          onChange={(e) => {
+            setDisplayName(e.target.value)
+          }}
+          type="text"
+          id="first_name"
+          className="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-full"
+          placeholder="Enter display name to everyone"
+          required
+        />
       </div>
       <div>
         {isCamOn ? (
