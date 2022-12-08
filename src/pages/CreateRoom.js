@@ -27,6 +27,11 @@ function CreatRoom() {
   const [isCamOn, setIsCamOn] = useState(true)
   const userId = useSelector(selectUserId)
   const displayName = useSelector(selectUsername)
+  const [errorText, setErrorText] = useState("")
+
+  const ERROR_TEXT = {
+    BLANK: "Blank display username",
+  }
 
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
@@ -70,6 +75,15 @@ function CreatRoom() {
     )
   }
 
+  const checkRequirements = () => {
+    if (displayName !== "" && displayName !== null) {
+      console.log(displayName)
+      handleJoiningMeet()
+    } else {
+      setErrorText(ERROR_TEXT.BLANK)
+    }
+  }
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="p-4 w-2/12">
@@ -80,6 +94,7 @@ function CreatRoom() {
         <input
           value={displayName}
           onChange={(e) => {
+            setErrorText("")
             setDisplayName(e.target.value)
           }}
           type="text"
@@ -88,6 +103,12 @@ function CreatRoom() {
           placeholder="Enter display name to everyone"
           required
         />
+
+        <div className="mt-3">
+          <p className="text-[#BF3325] italic font-semibold text-center">
+            {errorText}
+          </p>
+        </div>
       </div>
       <div>
         {isCamOn ? (
@@ -127,7 +148,7 @@ function CreatRoom() {
       <div
         className="bg-[#BF3325] my-4 flex justify-center items-center px-4 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer"
         onClick={() => {
-          handleJoiningMeet()
+          checkRequirements()
         }}
       >
         <p className="text-white ">Start meeting now</p>

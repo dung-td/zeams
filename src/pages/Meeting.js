@@ -635,7 +635,7 @@ function Meeting() {
       >
         {/* Sidebar */}
         <div
-          className={`absolute w-3/12 min-h-screen max-h-screen right-4 top-4 bottom-0 ${
+          className={`absolute w-3/12 max-h-screen right-4 top-4 bottom-16 ${
             sidebar === "background" ? "z-10" : "-z-10"
           } `}
         >
@@ -652,7 +652,7 @@ function Meeting() {
           updateLayoutRef={updateLayoutRef}
           // id="layer"
           className={`${
-            sidebar === "" ? "w-9/12 " : "w-full "
+            sidebar !== "" ? "w-full " : "w-9/12 "
           } flex flex-row  max-h-screen layer`}
         >
           <div id="localStreamRefDiv" className="h-full p-2 ">
