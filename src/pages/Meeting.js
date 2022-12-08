@@ -511,13 +511,13 @@ function Meeting() {
         return <Chat />
       case "attend":
         return <Attend otherPeers={otherPeers.current} local={userId} />
-      case "background":
-        return (
-          <Background
-            applyEffect={applyEffect}
-            changeSize={changeEffectSizeAndApply}
-          />
-        )
+      // case "background":
+      //   return (
+      //     <Background
+      //       applyEffect={applyEffect}
+      //       changeSize={changeEffectSizeAndApply}
+      //     />
+      //   )
       default:
         return null
     }
@@ -628,11 +628,23 @@ function Meeting() {
   }, [otherPeers.current])
 
   return (
-    <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
+    <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       <div
         id="parentLayout"
-        className="w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
+        className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
       >
+        {/* Sidebar */}
+        <div
+          className={`absolute w-3/12 min-h-screen max-h-screen right-4 top-4 bottom-0 ${
+            sidebar === "background" ? "z-10" : "-z-10"
+          } `}
+        >
+          <Background
+            applyEffect={applyEffect}
+            changeSize={changeEffectSizeAndApply}
+          />
+        </div>
+
         <PackedGrid
           id="layout"
           boxAspectRatio={aspectRatio}
@@ -673,7 +685,6 @@ function Meeting() {
           })}
         </PackedGrid>
 
-        {/* Sidebar */}
         <div
           className={
             sidebar !== "" ? "w-3/12 flex flex-row  max-h-screen" : "hidden"

@@ -9,7 +9,7 @@ export const Background = (props) => {
   }
 
   return (
-    <div className="flex bg-white p-4 rounded-md h-full">
+    <div className="flex bg-white p-4 rounded-md">
       <div className="w-full flex flex-col justify-between">
         <div>
           <p className="font-bold text-md">Background</p>

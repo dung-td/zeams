@@ -62,8 +62,8 @@ function JoinRoom() {
           <span>{roomId}</span>
         </p>
       </div>
-      <div>
-        <video ref={localStreamRef} autoPlay></video>
+      <div className="w-4/12">
+        <video className="rounded-md" ref={localStreamRef} autoPlay></video>
       </div>
 
       <input
@@ -73,7 +73,7 @@ function JoinRoom() {
         }}
         type="text"
         id="first_name"
-        className="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-full"
+        className="mt-2 w-3/12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder="Enter display name to everyone"
         required
       />
