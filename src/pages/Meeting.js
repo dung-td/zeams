@@ -627,6 +627,8 @@ function Meeting() {
     }
   }, [otherPeers.current])
 
+  console.log("Sidebar" + sidebar)
+
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       <div
@@ -652,7 +654,7 @@ function Meeting() {
           updateLayoutRef={updateLayoutRef}
           // id="layer"
           className={`${
-            sidebar !== "" ? "w-full " : "w-9/12 "
+            sidebar !== "" ? "w-9/12 " : "w-full "
           } flex flex-row  max-h-screen layer`}
         >
           <div id="localStreamRefDiv" className="h-full p-2 ">
