@@ -26,7 +26,7 @@ function CreatRoom() {
   const [isMicOn, setIsMicOn] = useState(true)
   const [isCamOn, setIsCamOn] = useState(true)
   const userId = useSelector(selectUserId)
-  const displayName = useSelector(selectUsername)
+  const displayName = useSelector(selectUsername || "")
   const [errorText, setErrorText] = useState("")
 
   const ERROR_TEXT = {
@@ -86,7 +86,7 @@ function CreatRoom() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="p-4 w-2/12">
+      <div className="p-4 pb-2 w-2/12">
         <p className="text-white text-xl text-center">
           Meeting code: <span>{roomId}</span>
         </p>
@@ -99,17 +99,20 @@ function CreatRoom() {
           }}
           type="text"
           id="first_name"
-          className="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 w-full"
+          className="mt-2 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 w-full"
           placeholder="Enter display name to everyone"
           required
         />
 
-        <div className="mt-3">
+        <p className="text-white text-center font-bold mt-2">{displayName}</p>
+
+        <div className="mt-1">
           <p className="text-[#BF3325] italic font-semibold text-center">
             {errorText}
           </p>
         </div>
       </div>
+
       <div>
         {isCamOn ? (
           <video className="rounded-xl" ref={localStreamRef} autoPlay></video>
@@ -121,7 +124,7 @@ function CreatRoom() {
         )}
       </div>
 
-      <div className="flex flex-row mt-4 items-center gap-1 text-white">
+      <div className="flex flex-row mt-2 items-center gap-1 text-white">
         <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl">
           <span
             className="material-icons hover:cursor-pointer"

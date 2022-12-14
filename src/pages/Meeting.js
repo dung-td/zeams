@@ -41,7 +41,6 @@ function Meeting() {
 
   const { roomId } = useParams()
   const { action } = useParams()
-  const { roomRef } = useParams()
   const dispatch = useDispatch()
 
   const peers = useSelector(selectOtherPeers)
@@ -180,7 +179,7 @@ function Meeting() {
     sendToServer({
       type: "join",
       roomId: roomId,
-      roomRef: roomRef,
+      roomRef: docRef,
       data: {
         sender: {
           id: userId,
@@ -498,6 +497,7 @@ function Meeting() {
   }
 
   const removeRemoteStreamFromView = (index) => {
+    console.log("Remote peer: " + index)
     dispatch(removePeer({ index: index }))
 
     setTimeout(() => {
@@ -627,7 +627,15 @@ function Meeting() {
     }
   }, [otherPeers.current])
 
-  console.log("Sidebar" + sidebar)
+  window.onbeforeunload = (e) => {
+    sendToServer({
+      type: "hang-up",
+      roomId: roomId,
+      roomRef: docRef,
+      sender: userId,
+    })
+    return
+  }
 
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
@@ -659,6 +667,9 @@ function Meeting() {
         >
           <div id="localStreamRefDiv" className="h-full p-2 ">
             <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+              <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                You
+              </p>
               <video
                 id="localStream"
                 className="localStreamRef absolute"
@@ -679,8 +690,11 @@ function Meeting() {
           {peers.map((peerHTML, index) => {
             return (
               <div key={index} className="h-full p-2">
-                <div className="h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                   {parse(peerHTML)}
+                  <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                    {otherPeers.current[index].name}
+                  </p>
                 </div>
               </div>
             )
@@ -733,14 +747,11 @@ function Meeting() {
               sendToServer({
                 type: "hang-up",
                 roomId: roomId,
-                roomRef: roomRef,
-                sender: {
-                  id: userId,
-                  name: userName,
-                },
+                roomRef: docRef,
+                sender: userId,
               })
+
               navigate(`/`)
-              window.reload()
             }}
           >
             <p className="text-white">Leave Meeting</p>
