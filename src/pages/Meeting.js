@@ -41,6 +41,7 @@ function Meeting() {
 
   const { roomId } = useParams()
   const { action } = useParams()
+  const { roomRef } = useParams()
   const dispatch = useDispatch()
 
   const peers = useSelector(selectOtherPeers)
@@ -179,7 +180,7 @@ function Meeting() {
     sendToServer({
       type: "join",
       roomId: roomId,
-      roomRef: docRef,
+      roomRef: roomRef,
       data: {
         sender: {
           id: userId,
