@@ -197,7 +197,7 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver === userId) {
+          if (obj.data.receiver && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
 
             let arr = []
@@ -223,8 +223,7 @@ function Meeting() {
 
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender.id,
-                  name: obj.sender.name,
+                  id: obj.sender,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -268,10 +267,7 @@ function Meeting() {
                   sendToServer({
                     type: "answer",
                     roomId: roomId,
-                    sender: {
-                      id: userId,
-                      name: userName,
-                    },
+                    sender: userId,
                     receiver: otherPeers.current[index]?.id,
                     data: answerDescription,
                   })
@@ -285,8 +281,7 @@ function Meeting() {
 
             if (check < 0) {
               otherPeers.current.push({
-                id: obj.sender.id,
-                name: obj.sender.name,
+                id: obj.sender,
                 remoteStream: undefined,
                 peerConnection: undefined,
               })
@@ -307,8 +302,7 @@ function Meeting() {
             ) {
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender.id,
-                  name: obj.sender.name,
+                  id: obj.sender,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -370,10 +364,7 @@ function Meeting() {
             sendToServer({
               type: "ice-candidate",
               roomId: roomId,
-              sender: {
-                id: userId,
-                name: userName,
-              },
+              sender: userId,
               receiver: otherPeers.current[index].id,
               data: event.candidate,
             })
@@ -432,10 +423,7 @@ function Meeting() {
               sendToServer({
                 type: "offer",
                 roomId: roomId,
-                sender: {
-                  id: userId,
-                  name: userName,
-                },
+                sender: userId,
                 receiver: otherPeers.current[index].id,
                 data: offerDescription,
               })
