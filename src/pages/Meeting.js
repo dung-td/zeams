@@ -197,7 +197,7 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver && obj.data.receiver === userId) {
+          if (obj.data.receiver != null && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
 
             let arr = []
@@ -223,8 +223,8 @@ function Meeting() {
 
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
-                  name: 'qwert',
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -268,7 +268,10 @@ function Meeting() {
                   sendToServer({
                     type: "answer",
                     roomId: roomId,
-                    sender: userId,
+                    sender: {
+                      id: userId,
+                      name: userName,
+                    },
                     receiver: otherPeers.current[index]?.id,
                     data: answerDescription,
                   })
@@ -282,7 +285,8 @@ function Meeting() {
 
             if (check < 0) {
               otherPeers.current.push({
-                id: obj.sender,
+                id: obj.sender.id,
+                name: obj.sender.name,
                 remoteStream: undefined,
                 peerConnection: undefined,
               })
@@ -299,11 +303,12 @@ function Meeting() {
 
             if (
               obj.receiver == userId &&
-              obj.sender == otherPeers.current[check].id
+              obj.sender.id == otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -365,7 +370,10 @@ function Meeting() {
             sendToServer({
               type: "ice-candidate",
               roomId: roomId,
-              sender: userId,
+              sender: {
+                id: userId,
+                name: userName,
+              },
               receiver: otherPeers.current[index].id,
               data: event.candidate,
             })
@@ -424,7 +432,10 @@ function Meeting() {
               sendToServer({
                 type: "offer",
                 roomId: roomId,
-                sender: userId,
+                sender: {
+                  id: userId,
+                  name: userName,
+                },
                 receiver: otherPeers.current[index].id,
                 data: offerDescription,
               })
@@ -683,7 +694,7 @@ function Meeting() {
                 <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                   {parse(peerHTML)}
                   <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                    {otherPeers.current[index]?.name}
+                    {otherPeers.current[index].name}
                   </p>
                 </div>
               </div>
