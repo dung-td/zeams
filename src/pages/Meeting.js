@@ -627,15 +627,15 @@ function Meeting() {
     }
   }, [otherPeers.current])
 
-  window.onbeforeunload = (e) => {
-    sendToServer({
-      type: "hang-up",
-      roomId: roomId,
-      roomRef: docRef,
-      sender: userId,
-    })
-    return
-  }
+  // window.onbeforeunload = (e) => {
+  //   sendToServer({
+  //     type: "hang-up",
+  //     roomId: roomId,
+  //     roomRef: docRef,
+  //     sender: userId,
+  //   })
+  //   return
+  // }
 
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
