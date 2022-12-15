@@ -77,7 +77,7 @@ function JoinRoom() {
         </p>
       </div>
       <div className="w-4/12">
-        <video className="rounded-md" ref={localStreamRef} autoPlay></video>
+        <video className="rounded-md" ref={localStreamRef} autoPlay muted></video>
       </div>
 
       <input

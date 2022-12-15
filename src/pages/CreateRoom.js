@@ -112,7 +112,12 @@ function CreatRoom() {
       </div>
       <div>
         {isCamOn ? (
-          <video className="rounded-xl" ref={localStreamRef} autoPlay></video>
+          <video
+            className="rounded-xl"
+            ref={localStreamRef}
+            autoPlay
+            muted
+          ></video>
         ) : (
           <img
             className="h-80 rounded-xl"
