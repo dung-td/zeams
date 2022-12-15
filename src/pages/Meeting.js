@@ -224,6 +224,7 @@ function Meeting() {
               if (check < 0) {
                 otherPeers.current.push({
                   id: obj.sender,
+                  name: 'qwert',
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -298,7 +299,7 @@ function Meeting() {
 
             if (
               obj.receiver == userId &&
-              obj.sender.id == otherPeers.current[check].id
+              obj.sender == otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
@@ -682,7 +683,7 @@ function Meeting() {
                 <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                   {parse(peerHTML)}
                   <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                    {otherPeers.current[index].name}
+                    {otherPeers.current[index]?.name}
                   </p>
                 </div>
               </div>
