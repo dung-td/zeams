@@ -47,6 +47,7 @@ function Meeting() {
   const peers = useSelector(selectOtherPeers)
   const localStreamRef = useRef()
   const processedLocalStreamRef = useRef()
+  const processedLocalStreamRefCache = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
@@ -512,13 +513,6 @@ function Meeting() {
         return <Chat />
       case "attend":
         return <Attend otherPeers={otherPeers.current} local={userId} />
-      // case "background":
-      //   return (
-      //     <Background
-      //       applyEffect={applyEffect}
-      //       changeSize={changeEffectSizeAndApply}
-      //     />
-      //   )
       default:
         return null
     }
@@ -532,25 +526,20 @@ function Meeting() {
       setBackground(backgroundImage)
     }
 
-    start(videoElement, canvasElement, option).catch((err) =>
+    await start(videoElement, canvasElement, option).catch((err) =>
       console.error(err)
     )
-  }
-
-  const changeEffectSizeAndApply = () => {
-    const videoElement = document.getElementsByClassName("localStreamRef")[0]
-    const canvasElement = document.getElementById("canvasTesting")
 
     changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
 
     canvasElement.height = videoElement.offsetHeight
     canvasElement.width = videoElement.offsetWidth
+  }
+
+  const changeEffectSizeAndApply = () => {
+    const canvasElement = document.getElementById("canvasTesting")
 
     processedLocalStreamRef.current.srcObject = canvasElement.captureStream(30)
-
-    const processedVideoElement = document.getElementById(
-      "processedLocalStream"
-    )
 
     const processedLocalStreamElement = document.getElementById(
       "processedLocalStream"
@@ -668,23 +657,30 @@ function Meeting() {
         >
           <div id="localStreamRefDiv" className="h-full p-2 ">
             <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
-              <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+              <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                 You
               </p>
               <video
                 id="localStream"
-                className="localStreamRef absolute"
+                className="localStreamRef absolute w-full"
                 ref={localStreamRef}
                 autoPlay
                 muted
               />
               <video
                 id="processedLocalStream"
-                className="processedLocalStream absolute"
+                className="processedLocalStream absolute w-full"
                 ref={processedLocalStreamRef}
                 autoPlay
                 muted
               />
+              {/* <video
+                id="processedLocalStreamCache"
+                className="processedLocalStreamCache absolute w-full"
+                ref={processedLocalStreamRefCache}
+                autoPlay
+                muted
+              /> */}
             </div>
           </div>
 
@@ -837,7 +833,10 @@ function Meeting() {
 
       {/* Loading */}
       {isLoading ? (
-        <div class="text-center absolute top-0 w-full h-full z-20 bg-slate-400/40">
+        <div
+          id="loadingIcon"
+          class="text-center absolute top-0 w-full h-full z-20 bg-slate-400/40"
+        >
           <div className="h-full flex flex-col items-center justify-center">
             <svg
               className="inline m-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"

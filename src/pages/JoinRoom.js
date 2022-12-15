@@ -90,9 +90,12 @@ function JoinRoom() {
         required
       />
 
-      <p className="text-white text-center font-bold mt-2">{displayName}</p>
-
-      <div className="w-4/12 mt-4">
+      <div className="w-4/12 mt-4 relative">
+        {displayName !== "" ? (
+          <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+            {displayName}
+          </p>
+        ) : null}
         <video
           className="rounded-md"
           ref={localStreamRef}

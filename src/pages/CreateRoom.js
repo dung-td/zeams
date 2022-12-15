@@ -12,7 +12,8 @@ import { generateRoomId } from "../utils"
 const mediaConstraints = {
   audio: true,
   video: {
-    height: 320,
+    height: 560,
+    width: 720,
     frameRate: 60,
     facingMode: "user", // 'user'
   },
@@ -104,8 +105,6 @@ function CreatRoom() {
           required
         />
 
-        <p className="text-white text-center font-bold mt-2">{displayName}</p>
-
         <div className="mt-1">
           <p className="text-[#BF3325] italic font-semibold text-center">
             {errorText}
@@ -113,18 +112,26 @@ function CreatRoom() {
         </div>
       </div>
 
-      <div>
+      <div className="relative">
         {isCamOn ? (
-          <video
-            className="rounded-xl"
-            ref={localStreamRef}
-            autoPlay
-            muted
-          ></video>
+          <>
+            {displayName !== "" ? (
+              <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                {displayName}
+              </p>
+            ) : null}
+            <video
+              className="rounded-xl relative"
+              ref={localStreamRef}
+              autoPlay
+              muted
+            ></video>
+          </>
         ) : (
           <img
             className="h-80 rounded-xl"
             src={require("../img/image1.jpg")}
+            alt="background"
           ></img>
         )}
       </div>

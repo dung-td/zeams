@@ -1,12 +1,9 @@
 import { SelfieSegmentation } from "@mediapipe/selfie_segmentation"
-import background from "./img/background.jpg"
 
 let height, width
 let canvasCtx = undefined
 let backgroundImg = undefined
 let effectOption = ""
-
-let videoElement = undefined
 
 const selfieSegmentation = new SelfieSegmentation({
   locateFile: (file) => {
@@ -19,6 +16,9 @@ selfieSegmentation.setOptions({
 })
 
 selfieSegmentation.onResults((results) => {
+  // console.log("Drawing on size: " + height + "/" + width)
+  // console.log(results.image)
+  // console.log(results.segmentationMask)
   canvasCtx.save()
   canvasCtx.beginPath()
 
@@ -31,7 +31,6 @@ selfieSegmentation.onResults((results) => {
   canvasCtx.globalCompositeOperation = "source-in"
   canvasCtx.drawImage(results.image, 0, 0, width, height)
 
-  // Blur
   switch (effectOption) {
     case "background":
       const background = document.getElementById(backgroundImg)
@@ -53,27 +52,17 @@ selfieSegmentation.onResults((results) => {
 })
 
 async function segment(videoElement, canvasElement) {
-  console.log("Run segment")
-  console.log(
-    "Size: " + videoElement.offsetHeight + "/" + videoElement.offsetWidth
-  )
+  // console.log("Run segment")
+  // console.log("Size: " + height + "-" + width)
 
-  // canvasElement.height = videoElement.offsetHeight
-  // canvasElement.width = videoElement.offsetWidth
-
-  if (canvasCtx == undefined) {
+  if (canvasCtx === undefined) {
     canvasCtx = canvasElement.getContext("2d")
-    height = canvasElement.offsetHeight
-    width = canvasElement.offsetWidth
   } else {
     await selfieSegmentation.send({ image: videoElement })
   }
 }
 
 const handlePlaying = async (videoElement, canvasElement) => {
-  // canvasElement.height = videoElement.offsetHeight
-  // canvasElement.width = videoElement.offsetWidth
-
   let lastTime = new Date()
 
   async function getFrames() {
@@ -84,9 +73,6 @@ const handlePlaying = async (videoElement, canvasElement) => {
     }
     lastTime = now
     requestAnimationFrame(getFrames)
-
-    // setTimeout(() => {
-    // }, 5000)
   }
 
   await getFrames()
@@ -98,7 +84,8 @@ export async function start(videoElement, canvasElement, option) {
     "playing",
     handlePlaying(videoElement, canvasElement)
   )
-
+  height = canvasElement.offsetHeight
+  width = canvasElement.offsetWidth
   videoElement.play()
 }
 
@@ -108,7 +95,5 @@ export function changeSize(hei, wid) {
 }
 
 export function setBackground(backgroundImageId) {
-  console.log("Background: " + backgroundImageId)
-
   backgroundImg = backgroundImageId
 }
