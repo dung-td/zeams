@@ -73,11 +73,8 @@ function JoinRoom() {
     <div className="min-h-screen flex flex-col justify-center items-center">
       <div className="p-4">
         <p className="text-white text-xl">
-          <span>{roomId}</span>
+          ROOM: <span>{roomId}</span>
         </p>
-      </div>
-      <div className="w-4/12">
-        <video className="rounded-md" ref={localStreamRef} autoPlay muted></video>
       </div>
 
       <input
@@ -88,10 +85,21 @@ function JoinRoom() {
         }}
         type="text"
         id="first_name"
-        className="mt-2 w-3/12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+        className=" w-2/12 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
         placeholder="Enter display name to everyone"
         required
       />
+
+      <p className="text-white text-center font-bold mt-2">{displayName}</p>
+
+      <div className="w-4/12 mt-4">
+        <video
+          className="rounded-md"
+          ref={localStreamRef}
+          autoPlay
+          muted
+        ></video>
+      </div>
 
       <div className="mt-3">
         <p className="text-[#BF3325] italic font-semibold text-center">
