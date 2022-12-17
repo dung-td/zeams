@@ -97,3 +97,11 @@ export function changeSize(hei, wid) {
 export function setBackground(backgroundImageId) {
   backgroundImg = backgroundImageId
 }
+
+export function turnOffSegment(videoElement, canvasElement) {
+  backgroundImg = undefined
+  // videoElement.removeEventListener(
+  //   "playing",
+  //   handlePlaying(videoElement, canvasElement)
+  // )
+}

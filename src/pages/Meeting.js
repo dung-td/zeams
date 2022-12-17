@@ -10,7 +10,13 @@ import * as bodySegmentation from "@tensorflow-models/body-segmentation"
 import "@mediapipe/selfie_segmentation"
 import "@tensorflow/tfjs-converter"
 
-import { changeSize, segment, setBackground, start } from "../segment.mjs"
+import {
+  changeSize,
+  segment,
+  setBackground,
+  start,
+  turnOffSegment,
+} from "../segment.mjs"
 import { connection } from "../utils"
 import {
   selectLocalStream,
@@ -521,19 +527,33 @@ function Meeting() {
   const applyEffect = async (option, backgroundImage) => {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
+    if (option === "") {
+      removeBackground(videoElement, canvasElement)
+    } else {
+      if (option === "background") {
+        setBackground(backgroundImage)
+      }
 
-    if (option === "background") {
-      setBackground(backgroundImage)
+      await start(videoElement, canvasElement, option).catch((err) =>
+        console.error(err)
+      )
+
+      changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
+
+      canvasElement.height = videoElement.offsetHeight
+      canvasElement.width = videoElement.offsetWidth
     }
+  }
 
-    await start(videoElement, canvasElement, option).catch((err) =>
-      console.error(err)
+  const removeBackground = (videoElement, canvasElement) => {
+    turnOffSegment(videoElement, canvasElement)
+
+    const processedLocalStreamElement = document.getElementById(
+      "processedLocalStream"
     )
 
-    changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
-
-    canvasElement.height = videoElement.offsetHeight
-    canvasElement.width = videoElement.offsetWidth
+    processedLocalStreamElement.classList.remove("z-10")
+    processedLocalStreamElement.classList.add("-z-10")
   }
 
   const changeEffectSizeAndApply = () => {
@@ -546,6 +566,7 @@ function Meeting() {
     )
 
     processedLocalStreamElement.classList.add("z-10")
+    processedLocalStreamElement.classList.remove("-z-10")
 
     // Replace track after process for other peers
     otherPeers.current.forEach((peer) => {
@@ -689,7 +710,7 @@ function Meeting() {
               <div key={index} className="h-full p-2">
                 <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                   {parse(peerHTML)}
-                  <p className="absolute z-30 bottom-0 left-0 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                     {otherPeers.current[index].name}
                   </p>
                 </div>

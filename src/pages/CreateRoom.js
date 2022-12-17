@@ -113,26 +113,24 @@ function CreatRoom() {
       </div>
 
       <div className="relative">
+        {displayName !== "" ? (
+          <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+            {displayName}
+          </p>
+        ) : null}
         {isCamOn ? (
-          <>
-            {displayName !== "" ? (
-              <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                {displayName}
-              </p>
-            ) : null}
-            <video
-              className="rounded-xl relative"
-              ref={localStreamRef}
-              autoPlay
-              muted
-            ></video>
-          </>
+          <video
+            className="rounded-xl relative"
+            ref={localStreamRef}
+            autoPlay
+            muted
+          ></video>
         ) : (
-          <img
-            className="h-80 rounded-xl"
-            src={require("../img/image1.jpg")}
-            alt="background"
-          ></img>
+          <div className="h-[540px] w-[720px] rounded-xl flex justify-center items-center bg-[#242736]">
+            <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+              <span class="material-icons text-5xl">perm_identity</span>
+            </div>
+          </div>
         )}
       </div>
 
