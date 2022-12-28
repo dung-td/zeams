@@ -25,6 +25,10 @@ import {
   addPeer,
   selectOtherPeers,
   removePeer,
+  selectAudio,
+  selectVideo,
+  updateAudio,
+  updateVideo,
 } from "../redux/slices/ConnectionSlice"
 import {
   selectUserId,
@@ -39,8 +43,6 @@ import {
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
-
-const isVoiceOnly = false
 
 function Meeting() {
   const navigate = useNavigate()
@@ -59,11 +61,10 @@ function Meeting() {
   let userId = useSelector(selectUserId)
   let userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
-  const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
 
-  const [isMicOn, setIsMicOn] = useState(true)
-  const [isCamOn, setIsCamOn] = useState(true)
+  const isMicOn = useSelector(selectAudio)
+  const isCamOn = useSelector(selectVideo)
   const [isUsingEffect, setIsUsingEffect] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [sidebar, setSidebar] = useState("")
@@ -101,7 +102,10 @@ function Meeting() {
   const preLoadLocalStream = () => {
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
-      localStreamRef.current.srcObject = stream
+      // localStreamRef.current.srcObject = stream
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
     })
   }
 
@@ -626,6 +630,31 @@ function Meeting() {
     }
   }, [])
 
+  useEffect(() => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }, [isCamOn])
+
+  useEffect(() => {
+    if (localStreamRef.current) {
+      localStreamRef.current.getAudioTrack().forEach((track) => {
+        track.enabled = !track.enabled
+      })
+    }
+  }, [isMicOn])
+
   // Handle create peerConnection for other peers
   useEffect(() => {
     if (otherPeers.current.length > 0) {
@@ -681,20 +710,32 @@ function Meeting() {
               <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                 You
               </p>
-              <video
-                id="localStream"
-                className="localStreamRef absolute w-full"
-                ref={localStreamRef}
-                autoPlay
-                muted
-              />
-              <video
-                id="processedLocalStream"
-                className="processedLocalStream absolute w-full"
-                ref={processedLocalStreamRef}
-                autoPlay
-                muted
-              />
+              {isCamOn ? (
+                <>
+                  <video
+                    id="localStream"
+                    className="localStreamRef absolute w-full"
+                    ref={localStreamRef}
+                    autoPlay
+                    muted
+                  />
+                  <video
+                    id="processedLocalStream"
+                    className="processedLocalStream absolute w-full"
+                    ref={processedLocalStreamRef}
+                    autoPlay
+                    muted
+                  />
+                </>
+              ) : (
+                <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                  <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+                    <span className="material-icons text-5xl">
+                      perm_identity
+                    </span>
+                  </div>
+                </div>
+              )}
               {/* <video
                 id="processedLocalStreamCache"
                 className="processedLocalStreamCache absolute w-full"
@@ -739,7 +780,11 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                setIsMicOn(!isMicOn)
+                dispatch(
+                  updateAudio({
+                    audio: !isMicOn,
+                  })
+                )
               }}
             >
               {isMicOn ? "mic" : "mic_off"}
@@ -750,7 +795,11 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                setIsCamOn(!isCamOn)
+                dispatch(
+                  updateVideo({
+                    video: !isCamOn,
+                  })
+                )
               }}
             >
               {isCamOn ? "videocam" : "videocam_off"}
