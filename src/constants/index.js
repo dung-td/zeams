@@ -33,12 +33,7 @@ export const SERVERS = {
 }
 
 export const MEDIA_CONSTRAINTS = {
-  audio: selectAudio
-    ? {
-        echoCancellation: true,
-        noiseSuppression: true,
-      }
-    : false,
+  audio: selectAudio ? true : false,
   video: selectVideo
     ? {
         frameRate: 60,

@@ -370,8 +370,8 @@ function Meeting() {
             peer.peerConnection.getSenders().forEach((sender) => {
               sender.replaceTrack(
                 !processedLocalStreamRef
-                  ? stream.getVideoTracks()[0]
-                  : processedLocalStreamRef.current.srcObject.getVideoTracks()[0]
+                  ? stream.getTracks()[0]
+                  : processedLocalStreamRef.current.srcObject.getTracks()[0]
               )
             })
           }
@@ -400,9 +400,7 @@ function Meeting() {
         "track",
         (event) => {
           let remoteStream = new MediaStream()
-          console.log("In Track")
           if (event.streams[0]) {
-            console.log("streams[0]")
             // event.streams[0].getTracks().forEach((track) => {
             //   remoteStream.addTrack(track)
             // })
@@ -414,15 +412,33 @@ function Meeting() {
 
           let videoId = "remoteStream" + otherPeers.current[index].id
 
-          console.log(videoId)
-
           if (otherPeers.current[index].remoteStream === undefined) {
             addRemoteStreamToView(videoId)
+            otherPeers.current[index].remoteStream = new MediaStream()
           }
 
-          otherPeers.current[index].remoteStream = remoteStream
+          if (remoteStream.getAudioTracks()[0]) {
+            console.log(remoteStream.getAudioTracks()[0])
+            otherPeers.current[index].remoteStream.addTrack(
+              remoteStream.getAudioTracks()[0]
+            )
+          }
 
-          updateRemoteStream(remoteStream, videoId)
+          if (remoteStream.getVideoTracks()[0]) {
+            console.log(remoteStream.getVideoTracks()[0])
+            otherPeers.current[index].remoteStream.addTrack(
+              remoteStream.getVideoTracks()[0]
+            )
+          }
+
+          console.log(
+            otherPeers.current[index].remoteStream.getAudioTracks()[0]
+          )
+          console.log(
+            otherPeers.current[index].remoteStream.getVideoTracks()[0]
+          )
+
+          updateRemoteStream(otherPeers.current[index].remoteStream, videoId)
 
           deepClonePeers()
         }
@@ -508,7 +524,7 @@ function Meeting() {
       const video = document.querySelector("#" + videoId)
       video.autoplay = true
       video.srcObject = remoteStream
-      video.play()
+      // video.play()
     }, 1000)
   }
 
