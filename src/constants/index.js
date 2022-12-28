@@ -30,10 +30,7 @@ export const SERVERS = {
 }
 
 export const MEDIA_CONSTRAINTS = {
-  audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-  },
+  audio: true,
   video: {
     frameRate: 60,
     facingMode: "user", // 'user'

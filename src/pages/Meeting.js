@@ -59,7 +59,6 @@ function Meeting() {
   let userId = useSelector(selectUserId)
   let userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
-  const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
 
   const [isMicOn, setIsMicOn] = useState(true)
@@ -361,9 +360,9 @@ function Meeting() {
             console.log("REPLACE TRACK")
             peer.peerConnection.getSenders().forEach((sender) => {
               sender.replaceTrack(
-                !processedLocalStreamRef
-                  ? stream.getVideoTracks()[0]
-                  : processedLocalStreamRef.current.srcObject.getVideoTracks()[0]
+                !localStreamRef
+                  ? stream.getTracks()[0]
+                  : localStreamRef.current.srcObject.getTracks()[0]
               )
             })
           }
