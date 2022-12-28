@@ -1,20 +1,19 @@
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Routes, Route, useParams, useNavigate } from "react-router-dom"
+import { MEDIA_CONSTRAINTS } from "../constants"
 
 import {
   selectUserId,
   selectUsername,
   setUsername,
 } from "../redux/slices/AuthenticationSlice"
-
-const mediaConstraints = {
-  audio: true,
-  video: {
-    frameRate: 60,
-    facingMode: "user", // 'user'
-  },
-}
+import {
+  selectAudio,
+  selectVideo,
+  updateAudio,
+  updateVideo,
+} from "../redux/slices/ConnectionSlice"
 
 function JoinRoom() {
   const navigate = useNavigate()
@@ -24,6 +23,8 @@ function JoinRoom() {
   const { roomRef } = useParams()
   const userId = useSelector(selectUserId)
   const displayName = useSelector(selectUsername)
+  const isMicOn = useSelector(selectAudio)
+  const isCamOn = useSelector(selectVideo)
   const [errorText, setErrorText] = useState("")
 
   const ERROR_TEXT = {
@@ -42,9 +43,11 @@ function JoinRoom() {
   useEffect(() => {
     const gettingVideoStream = () => {
       try {
-        navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-          localStreamRef.current.srcObject = stream
-        })
+        navigator.mediaDevices
+          .getUserMedia(MEDIA_CONSTRAINTS)
+          .then((stream) => {
+            localStreamRef.current.srcObject = stream
+          })
       } catch (err) {
         console.log(err)
       }
@@ -68,6 +71,15 @@ function JoinRoom() {
       setErrorText(ERROR_TEXT.BLANK)
     }
   }
+
+  useEffect(() => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+    })
+  }, [isCamOn])
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center">
@@ -96,12 +108,20 @@ function JoinRoom() {
             {displayName}
           </p>
         ) : null}
-        <video
-          className="rounded-md"
-          ref={localStreamRef}
-          autoPlay
-          muted
-        ></video>
+        {isCamOn ? (
+          <video
+            className="rounded-md"
+            ref={localStreamRef}
+            autoPlay
+            muted
+          ></video>
+        ) : (
+          <div className="h-full w-full min-h-[300px] rounded-xl flex justify-center items-center bg-[#242736]">
+            <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+              <span className="material-icons text-5xl">perm_identity</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-3">
@@ -110,6 +130,38 @@ function JoinRoom() {
         </p>
       </div>
 
+      <div className="flex flex-row mt-2 items-center gap-1 text-white">
+        <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl">
+          <span
+            className="material-icons hover:cursor-pointer"
+            onClick={() => {
+              dispatch(
+                updateAudio({
+                  audio: !isMicOn,
+                })
+              )
+              // setIsMicOn(!isMicOn)
+            }}
+          >
+            {isMicOn ? "mic" : "mic_off"}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl">
+          <span
+            className="material-icons hover:cursor-pointer h-full"
+            onClick={() => {
+              dispatch(
+                updateVideo({
+                  video: !isCamOn,
+                })
+              )
+            }}
+          >
+            {isCamOn ? "videocam" : "videocam_off"}
+          </span>
+        </div>
+      </div>
       <div
         className="bg-[#BF3325] my-4 flex justify-center items-center px-4 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer"
         onClick={() => {

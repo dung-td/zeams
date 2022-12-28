@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Routes, Route, useNavigate } from "react-router-dom"
+import { MEDIA_CONSTRAINTS } from "../constants"
 
 import {
   selectUserId,
@@ -30,16 +31,6 @@ function CreatRoom() {
     BLANK: "Blank display username",
   }
 
-  const mediaConstraints = {
-    audio: isMicOn,
-    video: {
-      height: 560,
-      width: 720,
-      frameRate: 60,
-      facingMode: "user", // 'user'
-    },
-  }
-
   const handleJoiningMeet = () => {
     if (localStreamRef.current != undefined) {
       // localStreamRef.current.getTracks().map((track) => {
@@ -59,9 +50,11 @@ function CreatRoom() {
     const gettingVideoStream = () => {
       try {
         console.log("Get user media")
-        navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-          localStreamRef.current.srcObject = stream
-        })
+        navigator.mediaDevices
+          .getUserMedia(MEDIA_CONSTRAINTS)
+          .then((stream) => {
+            localStreamRef.current.srcObject = stream
+          })
       } catch (err) {
         // Handle Error
       }

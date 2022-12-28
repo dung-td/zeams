@@ -43,6 +43,7 @@ import {
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
+import FocusLayout from "../components/FocusLayout.js"
 
 function Meeting() {
   const navigate = useNavigate()
@@ -76,6 +77,9 @@ function Meeting() {
 
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
+  const [focusMode, setFocusMode] = useState(false)
+  const [focusStream, setFocusStream] = useState()
+  const [focusName, setFocusName] = useState()
 
   const deepClonePeers = () => {
     // dispatch(
@@ -648,11 +652,11 @@ function Meeting() {
   }, [isCamOn])
 
   useEffect(() => {
-    if (localStreamRef.current) {
-      localStreamRef.current.getAudioTrack().forEach((track) => {
-        track.enabled = !track.enabled
-      })
-    }
+    // if (localStreamRef.current) {
+    //   localStreamRef.current.getAudioTrack().forEach((track) => {
+    //     track.enabled = !track.enabled
+    //   })
+    // }
   }, [isMicOn])
 
   // Handle create peerConnection for other peers
@@ -677,6 +681,12 @@ function Meeting() {
   //   return
   // }
 
+  const setFocus = (stream, name) => {
+    setFocusStream(stream)
+    setFocusName(name)
+    setFocusMode(true)
+  }
+
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       <div
@@ -695,70 +705,97 @@ function Meeting() {
           />
         </div>
 
-        <PackedGrid
-          id="layout"
-          boxAspectRatio={aspectRatio}
-          // className="fullscreen"
-          updateLayoutRef={updateLayoutRef}
-          // id="layer"
-          className={`${
-            sidebar !== "" ? "w-9/12 " : "w-full "
-          } flex flex-row  max-h-screen layer`}
-        >
-          <div id="localStreamRefDiv" className="h-full p-2 ">
-            <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
-              <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                You
-              </p>
-              {isCamOn ? (
-                <>
-                  <video
-                    id="localStream"
-                    className="localStreamRef absolute w-full"
-                    ref={localStreamRef}
-                    autoPlay
-                    muted
-                  />
-                  <video
-                    id="processedLocalStream"
-                    className="processedLocalStream absolute w-full"
-                    ref={processedLocalStreamRef}
-                    autoPlay
-                    muted
-                  />
-                </>
-              ) : (
-                <div className="w-full h-full flex justify-center items-center bg-[#242736]">
-                  <div className="text-white bg-[#242736]/70 p-20 rounded-md">
-                    <span className="material-icons text-5xl">
-                      perm_identity
-                    </span>
+        {focusMode ? (
+          <div
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer p-8`}
+          >
+            <FocusLayout
+              mainName={focusName}
+              peers={peers}
+              mainStreamRef={focusStream}
+            />
+          </div>
+        ) : (
+          <PackedGrid
+            id="layout"
+            boxAspectRatio={aspectRatio}
+            // className="fullscreen"
+            updateLayoutRef={updateLayoutRef}
+            // id="layer"
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer`}
+          >
+            <div
+              id="localStreamRefDiv"
+              className="h-full p-2 "
+              onClick={() => {
+                if (focusMode) {
+                  setFocusMode(false)
+                } else setFocus(localStreamRef, userName)
+              }}
+            >
+              <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  You
+                </p>
+                {isCamOn ? (
+                  <>
+                    <video
+                      id="localStream"
+                      className="localStreamRef absolute w-full"
+                      ref={localStreamRef}
+                      autoPlay
+                      muted
+                    />
+                    <video
+                      id="processedLocalStream"
+                      className="processedLocalStream absolute w-full"
+                      ref={processedLocalStreamRef}
+                      autoPlay
+                      muted
+                    />
+                  </>
+                ) : (
+                  <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                    <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+                      <span className="material-icons text-5xl">
+                        perm_identity
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {peers.map((peerHTML, index) => {
+              return (
+                <div
+                  key={index}
+                  className="h-full p-2"
+                  onClick={() => {
+                    if (focusMode) {
+                      setFocusMode(false)
+                    } else
+                      setFocus(
+                        otherPeers.current[index].remoteStream,
+                        otherPeers.current[index].name
+                      )
+                  }}
+                >
+                  <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                    {parse(peerHTML)}
+                    <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                      {otherPeers.current[index].name}
+                    </p>
                   </div>
                 </div>
-              )}
-              {/* <video
-                id="processedLocalStreamCache"
-                className="processedLocalStreamCache absolute w-full"
-                ref={processedLocalStreamRefCache}
-                autoPlay
-                muted
-              /> */}
-            </div>
-          </div>
-
-          {peers.map((peerHTML, index) => {
-            return (
-              <div key={index} className="h-full p-2">
-                <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
-                  {parse(peerHTML)}
-                  <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                    {otherPeers.current[index].name}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </PackedGrid>
+              )
+            })}
+          </PackedGrid>
+        )}
 
         <div
           className={
