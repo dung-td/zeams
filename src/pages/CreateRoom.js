@@ -25,7 +25,7 @@ function CreatRoom() {
   const isCamOn = useSelector(selectVideo)
   const userId = useSelector(selectUserId)
   const displayName = useSelector(selectUsername || "")
-  const [errorText, setErrorText] = useState("")
+  const [errorText, setErrorText] = useState(" ")
 
   const ERROR_TEXT = {
     BLANK: "Blank display username",
@@ -83,7 +83,7 @@ function CreatRoom() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
+    <div className="min-h-screen max-h-screen flex flex-col justify-center items-center">
       <div className="p-4 pb-2 w-2/12">
         <p className="text-white text-xl text-center">
           Meeting code: <span>{roomId}</span>
@@ -130,7 +130,7 @@ function CreatRoom() {
             muted
           ></video>
         ) : (
-          <div className="h-[540px] w-[720px] rounded-xl flex justify-center items-center bg-[#242736]">
+          <div className="h-[720px] w-[1280px] rounded-xl flex justify-center items-center bg-[#242736]">
             <div className="text-white bg-[#242736]/70 p-20 rounded-md">
               <span className="material-icons text-5xl">perm_identity</span>
             </div>

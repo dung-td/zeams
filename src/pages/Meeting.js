@@ -43,7 +43,6 @@ import {
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
-import FocusLayout from "../components/FocusLayout.js"
 
 function Meeting() {
   const navigate = useNavigate()
@@ -78,8 +77,8 @@ function Meeting() {
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
   const [focusMode, setFocusMode] = useState(false)
-  const [focusStream, setFocusStream] = useState()
-  const [focusName, setFocusName] = useState()
+  const focusStreamRef = useRef()
+  const [focusName, setFocusName] = useState("")
 
   const deepClonePeers = () => {
     // dispatch(
@@ -514,7 +513,9 @@ function Meeting() {
     dispatch(addPeer({ peer: videoContainer.outerHTML }))
 
     setTimeout(() => {
-      updateLayoutRef.current()
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
     }, 500)
   }
 
@@ -533,7 +534,9 @@ function Meeting() {
     dispatch(removePeer({ index: index }))
 
     setTimeout(() => {
-      updateLayoutRef.current()
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
     }, 5)
   }
 
@@ -639,6 +642,41 @@ function Meeting() {
       })
   }
 
+  const setFocus = (stream, name) => {
+    setFocusMode(true)
+
+    setTimeout(() => {
+      let focusStreamElement = document.getElementById("focusStream")
+
+      focusStreamElement.srcObject = stream
+    }, 1000)
+
+    setFocusName(name)
+  }
+
+  const unsetFocus = (origin) => {
+    setFocusMode(false)
+
+    if (origin === "local") getNewMediaStream()
+  }
+
+  const getNewMediaStream = () => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }
+
   // initialize socket-io connection
   useEffect(() => {
     preLoadLocalStream()
@@ -697,12 +735,6 @@ function Meeting() {
   //   return
   // }
 
-  const setFocus = (stream, name) => {
-    setFocusStream(stream)
-    setFocusName(name)
-    setFocusMode(true)
-  }
-
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       <div
@@ -722,22 +754,56 @@ function Meeting() {
         </div>
 
         {focusMode ? (
+          // FOCUS MODE
           <div
             className={`${
               sidebar !== "" ? "w-9/12 " : "w-full "
             } flex flex-row  max-h-screen layer p-8`}
           >
-            <FocusLayout
-              mainName={focusName}
-              peers={peers}
-              mainStreamRef={focusStream}
-            />
+            <div className="w-full h-full flex flex-row justify-center items-center gap-4">
+              <div
+                className="relative w-11/12 h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden"
+                onClick={() => {
+                  unsetFocus("local")
+                }}
+              >
+                <video
+                  id="focusStream"
+                  className="w-full h-full"
+                  autoPlay
+                  muted
+                />
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  {focusName}
+                </p>
+              </div>
+
+              <div className="w-1/12 h-full rounded-md flex flex-col justify-center items-center gap-4 text-white">
+                {peers.map((index) => {
+                  if (index > 5) {
+                    return null
+                  } else if (index === 5) {
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center text-2xl">
+                        +5
+                      </div>
+                    )
+                  } else
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center">
+                        <span className="material-icons text-3xl">
+                          perm_identity
+                        </span>
+                      </div>
+                    )
+                })}
+              </div>
+            </div>
           </div>
         ) : (
           <PackedGrid
             id="layout"
             boxAspectRatio={aspectRatio}
-            // className="fullscreen"
             updateLayoutRef={updateLayoutRef}
             // id="layer"
             className={`${
@@ -748,9 +814,7 @@ function Meeting() {
               id="localStreamRefDiv"
               className="h-full p-2 "
               onClick={() => {
-                if (focusMode) {
-                  setFocusMode(false)
-                } else setFocus(localStreamRef, userName)
+                setFocus(localStreamRef.current.srcObject, "You")
               }}
             >
               <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
@@ -792,13 +856,10 @@ function Meeting() {
                   key={index}
                   className="h-full p-2"
                   onClick={() => {
-                    if (focusMode) {
-                      setFocusMode(false)
-                    } else
-                      setFocus(
-                        otherPeers.current[index].remoteStream,
-                        otherPeers.current[index].name
-                      )
+                    setFocus(
+                      otherPeers.current[index].remoteStream,
+                      otherPeers.current[index].name
+                    )
                   }}
                 >
                   <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
@@ -887,7 +948,9 @@ function Meeting() {
               }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >
@@ -925,7 +988,9 @@ function Meeting() {
               }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >
@@ -944,7 +1009,9 @@ function Meeting() {
               }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >

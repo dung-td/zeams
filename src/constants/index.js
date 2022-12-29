@@ -38,8 +38,8 @@ export const MEDIA_CONSTRAINTS = {
     ? {
         frameRate: 60,
         facingMode: "user", // 'user'
-        width: { min: 600, ideal: 1920, max: 1920 },
-        height: { min: 300, ideal: 1080, max: 1080 },
+        width: { min: 1280, max: 1280 },
+        height: { min: 720, max: 720 },
       }
     : false,
 }
