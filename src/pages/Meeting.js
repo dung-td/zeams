@@ -4,11 +4,6 @@ import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
-import "@tensorflow/tfjs-core"
-import "@tensorflow/tfjs-backend-webgl"
-import * as bodySegmentation from "@tensorflow-models/body-segmentation"
-import "@mediapipe/selfie_segmentation"
-import "@tensorflow/tfjs-converter"
 
 import {
   changeSize,
@@ -43,6 +38,7 @@ import {
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
+import { changeSizeMask, startMask } from "../faceMask.js"
 
 function Meeting() {
   const navigate = useNavigate()
@@ -78,6 +74,7 @@ function Meeting() {
   const [aspectRatio, setAspectRatio] = useState(1)
   const [focusMode, setFocusMode] = useState(false)
   const focusStreamRef = useRef()
+  const [focusModeCache, setFocusModeCache] = useState("")
   const [focusName, setFocusName] = useState("")
 
   const deepClonePeers = () => {
@@ -606,6 +603,27 @@ function Meeting() {
     })
   }
 
+  const applyMask = async () => {
+    const videoElement = document.getElementsByClassName("localStreamRef")[0]
+    const canvasElement = document.getElementById("canvasTesting")
+    // if (option === "") {
+    //   removeBackground(videoElement, canvasElement)
+    // } else {
+    //   if (option === "background") {
+    //     setBackground(backgroundImage)
+    //   }
+
+    await startMask(videoElement, canvasElement).catch((err) =>
+      console.error(err)
+    )
+
+    changeSizeMask(videoElement.offsetHeight, videoElement.offsetWidth)
+
+    canvasElement.height = videoElement.offsetHeight
+    canvasElement.width = videoElement.offsetWidth
+    // }
+  }
+
   const startCaptureScreen = () => {
     navigator.mediaDevices
       .getDisplayMedia(DISPLAY_MEDIA_CONSTRAINTS)
@@ -642,8 +660,9 @@ function Meeting() {
       })
   }
 
-  const setFocus = (stream, name) => {
+  const setFocus = (stream, name, elementId) => {
     setFocusMode(true)
+    setFocusModeCache(elementId)
 
     setTimeout(() => {
       let focusStreamElement = document.getElementById("focusStream")
@@ -654,10 +673,19 @@ function Meeting() {
     setFocusName(name)
   }
 
-  const unsetFocus = (origin) => {
+  const unsetFocus = () => {
+    let focusStreamElement = document.getElementById("focusStream")
+    let source = focusStreamElement.srcObject
     setFocusMode(false)
 
-    if (origin === "local") getNewMediaStream()
+    setTimeout(() => {
+      let originFocusElement = document.getElementById(focusModeCache)
+      console.log("Origin:" + focusModeCache)
+      console.log("Origin:" + originFocusElement.srcObject)
+
+      originFocusElement.srcObject = source
+      originFocusElement.play()
+    }, 1000)
   }
 
   const getNewMediaStream = () => {
@@ -750,6 +778,7 @@ function Meeting() {
           <Background
             applyEffect={applyEffect}
             changeSize={changeEffectSizeAndApply}
+            applyMask={applyMask}
           />
         </div>
 
@@ -764,7 +793,7 @@ function Meeting() {
               <div
                 className="relative w-11/12 h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden"
                 onClick={() => {
-                  unsetFocus("local")
+                  unsetFocus()
                 }}
               >
                 <video
@@ -814,7 +843,7 @@ function Meeting() {
               id="localStreamRefDiv"
               className="h-full p-2 "
               onClick={() => {
-                setFocus(localStreamRef.current.srcObject, "You")
+                setFocus(localStreamRef.current.srcObject, "You", "localStream")
               }}
             >
               <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
@@ -858,7 +887,8 @@ function Meeting() {
                   onClick={() => {
                     setFocus(
                       otherPeers.current[index].remoteStream,
-                      otherPeers.current[index].name
+                      otherPeers.current[index].name,
+                      "remoteStream" + otherPeers.current[index].id
                     )
                   }}
                 >
