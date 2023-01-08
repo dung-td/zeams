@@ -67,6 +67,7 @@ function Meeting() {
   const [isSharing, setIsSharing] = useState(false)
   const [sidebar, setSidebar] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const [initialising, setInitialising] = useState(true)
   const [camAmount, setCamAmount] = useState()
@@ -678,6 +679,7 @@ function Meeting() {
           <Background
             applyEffect={applyEffect}
             changeSize={changeEffectSizeAndApply}
+            setSidebar={(value) => setSidebar(value)}
           />
         </div>
 
@@ -789,23 +791,43 @@ function Meeting() {
           >
             <p className="text-white">Leave Meeting</p>
           </div>
-
-          <div
-            className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600"
-            onClick={() => {
-              if (sidebar == "background") {
-                setSidebar("")
-              } else {
-                setSidebar("background")
-              }
-
-              setTimeout(() => {
-                updateLayoutRef.current()
-              }, 1)
-            }}
-          >
-            <span className="material-icons text-white ">more_vert</span>
+          
+          <div className="relative">
+            {
+              showMore && (
+                <div class="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
+                  top: '-100px',
+                  width: '150px'
+                }}>
+                  <div className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center"
+                    onClick={() => {
+                      setSidebar("background")
+                      setShowMore(false)
+                      setTimeout(() => {
+                        updateLayoutRef.current()
+                      }, 1)
+                    }}
+                  >
+                    <span className="material-icons hover:text-white pr-1">blur_linear</span>
+                    Background
+                  </div>
+                  <div className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center">
+                    <span className="material-icons hover:text-white pr-1">color_lens</span>
+                    White board
+                  </div>
+                </div>
+              )
+            }
+            <div
+              className="relative bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600"
+              onClick={() => {
+                setShowMore(!showMore)
+              }}
+            >
+              <span className="material-icons text-white ">more_vert</span>
+            </div>
           </div>
+          
           <div
             className={`${
               isSharing ? "bg-[#0e78f8]" : "bg-[#242736]"
