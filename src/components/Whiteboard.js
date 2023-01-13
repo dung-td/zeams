@@ -1,27 +1,16 @@
 
-import {useRef, useEffect} from 'react'
+import {useRef, useEffect, useLayoutEffect, useState} from 'react'
 
-const useCanvas = (callback) => {
-  const canvasRef = useRef(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    callback([canvas, ctx]);
-  }, []);
-
-  return canvasRef;
-}
 
 const Whiteboard = ({visible, setVisible}) => {
-  // let context = useRef()
+  let contextRef = useRef()
   let lastPoint = useRef()
-  let currentForce = useRef(1);
-  let colorRef = useRef();
-  const canvasRef = useCanvas(([canvas, context]) => {
-    // ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // const x = canvas.width;
-    // const y = canvas.height;
+  let currentForce = useRef(1)
+  let colorRef = useRef()
+  let canvasRef = useRef()
+  const [canvasState, setCanvasState] = useState()
+
+  useLayoutEffect(() => {
     const randomColor = () => {
       let r = Math.random() * 255;
       let g = Math.random() * 255;
@@ -30,13 +19,13 @@ const Whiteboard = ({visible, setVisible}) => {
     }
     
     const draw = (data) => {
-      context.beginPath();
-      context.moveTo(data.lastPoint.x, data.lastPoint.y);
-      context.lineTo(data.x, data.y);
-      context.strokeStyle = data.color;
-      context.lineWidth = Math.pow(data.force || 1, 4) * 2;
-      context.lineCap = 'round';
-      context.stroke();
+      contextRef.current.beginPath();
+      contextRef.current.moveTo(data.lastPoint.x, data.lastPoint.y);
+      contextRef.current.lineTo(data.x, data.y);
+      contextRef.current.strokeStyle = data.color;
+      contextRef.current.lineWidth = Math.pow(data.force || 1, 4) * 2;
+      contextRef.current.lineCap = 'round';
+      contextRef.current.stroke();
     }
   
     const force = (e) => {
@@ -62,20 +51,26 @@ const Whiteboard = ({visible, setVisible}) => {
         lastPoint.current = {}
       }
     }  
-  
-    canvas.width = 70 * window.innerWidth / 100
-    canvas.height = 70 * window.innerHeight / 100
-    context =  canvas.getContext('2d')
-    context.clearRect(0, 0,  canvas.width,  canvas.height);
+    // console.log("canvas", canvasState)
+    if (canvasRef.current === undefined) 
+      return
+
+    const changeSizeWindow = () => {
+      canvasRef.current.width = 70 * window.innerWidth / 100
+      canvasRef.current.height = 70 * window.innerHeight / 100
+      contextRef.current =  canvasRef.current.getContext('2d')
+      contextRef.current.clearRect(0, 0,  canvasRef.current.width,  canvasRef.current.height);
+    }
+
+    canvasRef.current.width = 70 * window.innerWidth / 100
+    canvasRef.current.height = 70 * window.innerHeight / 100
+    contextRef.current =  canvasRef.current.getContext('2d')
+    contextRef.current.clearRect(0, 0,  canvasRef.current.width,  canvasRef.current.height);
     colorRef.current = randomColor()
     window.onmousemove = move
-  });
- 
 
-  useEffect(() => {
-   
-  }, [])
-
+    window.onresize = changeSizeWindow
+  })
 
   return (
     <>
