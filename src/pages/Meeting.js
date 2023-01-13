@@ -33,12 +33,14 @@ import {
 import { Chat } from "../components/Chat.js"
 import { Attend } from "../components/Attend.js"
 import { Background } from "../components/setting/Background.js"
+
 import {
   DISPLAY_MEDIA_CONSTRAINTS,
   MEDIA_CONSTRAINTS,
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
+import Whiteboard from "../components/Whiteboard.js"
 
 const isVoiceOnly = false
 
@@ -663,9 +665,10 @@ function Meeting() {
   //   })
   //   return
   // }
-
+  const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
+      <Whiteboard visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)}/>
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
@@ -791,11 +794,10 @@ function Meeting() {
           >
             <p className="text-white">Leave Meeting</p>
           </div>
-          
           <div className="relative">
             {
               showMore && (
-                <div class="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
+                <div className="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
                   top: '-100px',
                   width: '150px'
                 }}>
@@ -811,7 +813,14 @@ function Meeting() {
                     <span className="material-icons hover:text-white pr-1">blur_linear</span>
                     Background
                   </div>
-                  <div className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center">
+                  <div 
+                    className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center"
+                    onClick={() => {
+                      setVisibleWhiteboard(!visibleWhiteboard)
+                      setSidebar("")
+                      setShowMore(false)
+                    }}
+                  >
                     <span className="material-icons hover:text-white pr-1">color_lens</span>
                     White board
                   </div>
