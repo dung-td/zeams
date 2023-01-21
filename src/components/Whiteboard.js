@@ -4,7 +4,7 @@ import { SketchPicker } from 'react-color'
 import { useDispatch, useSelector } from 'react-redux'
 import { addPoint } from '../redux/slices/DrawSlice'
 
-const Whiteboard = ({visible, setVisible, otherPeers}) => {
+const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
   let contextRef = useRef()
   // let contextBufferedRef = useRef()
   let lastPoint = useRef()
@@ -100,6 +100,8 @@ const Whiteboard = ({visible, setVisible, otherPeers}) => {
 
       draw(dataRaw)
 
+      connection.emit("drawing", JSON.stringify(dataRaw))
+      
       let arr = arrPoint.current
       arr.push(dataRaw)
       arrPoint.current = [...arr]

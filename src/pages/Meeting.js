@@ -710,7 +710,7 @@ function Meeting() {
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
-      <Whiteboard  visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime}/>
+      <Whiteboard  visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
