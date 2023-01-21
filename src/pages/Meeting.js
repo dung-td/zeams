@@ -78,6 +78,11 @@ function Meeting() {
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
 
+  const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
+  const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
+
+  console.log('++', peers)
+
   const deepClonePeers = () => {
     // dispatch(
     //   updateOtherPeers({
@@ -108,7 +113,7 @@ function Meeting() {
   }
 
   const handleCleanUpConnection = (which) => {
-    if (which == "all") {
+    if (which === "all") {
       if (otherPeers.current.length > 0) {
         otherPeers.current?.forEach((item) => {
           item.peerConnection?.removeEventListener("track", () => null)
@@ -206,13 +211,12 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver === userId) {
+          if (obj.data.receiver !== null && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
-
             let arr = []
             obj.data.participants.forEach((person) => {
               console.log(obj.data)
-              if (person.id != userId) {
+              if (person.id !== userId) {
                 arr.push({
                   id: person.id,
                   name: person.name,
@@ -227,7 +231,7 @@ function Meeting() {
           break
         case "offer":
           try {
-            if (obj.receiver == userId) {
+            if (obj.receiver === userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
@@ -245,11 +249,11 @@ function Meeting() {
               }
 
               if (
-                obj.data !=
+                obj.data !==
                 otherPeers.current[index].peerConnection?.localDescription
               ) {
                 if (
-                  otherPeers.current[index].peerConnection.signalingState !=
+                  otherPeers.current[index].peerConnection.signalingState !==
                   "stable"
                 ) {
                   await Promise.all([
@@ -289,7 +293,7 @@ function Meeting() {
           } catch (e) {}
           break
         case "answer":
-          if (obj.receiver == userId) {
+          if (obj.receiver === userId) {
             const check = findOfferIndex(obj)
 
             if (check < 0) {
@@ -311,8 +315,8 @@ function Meeting() {
             const check = findOfferIndex(obj)
 
             if (
-              obj.receiver == userId &&
-              obj.sender.id == otherPeers.current[check].id
+              obj.receiver === userId &&
+              obj.sender.id === otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
@@ -347,9 +351,42 @@ function Meeting() {
   }
 
   const createPeerConnection = (index) => {
+    // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
+      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+        // ordered: false, // do not guarantee order
+        // maxPacketLifeTime: 3000, // in milliseconds
+        maxPacketLifeTime: 5000,
+        negotiated: true, 
+        ordered: true,
+        id: 1
+      })
+      // paint
+      const dataChannel = otherPeers.current[index].dataChannel
+      
+      dataChannel.onerror = (error) => {
+        console.log("Data Channel Error:", error);
+      };
+      
+      dataChannel.onmessage = (event) => {
+        // let arr = otherPeerDrawData
+        // arr.push(
+        //   JSON.parse(event.data)
+        // )
+        // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
+        // console.log("Got Data Channel Message:", event.data);
+      };
+      
+      dataChannel.onopen = () => {
+        // dataChannel.send("Hello World!");
+      };
+      
+      dataChannel.onclose = () => {
+        // console.log("The Data Channel is Closed");
+      };
 
+      // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
         // dispatch(updateLocalStream({ localStream: stream }))
         localStreamRef.current.srcObject = stream
@@ -359,7 +396,7 @@ function Meeting() {
 
         // replace old tracks in other peers with latest tracks
         otherPeers.current.forEach((peer, idx) => {
-          if (idx != index && peer.peerConnection) {
+          if (idx !== index && peer.peerConnection) {
             console.log("REPLACE TRACK")
             peer.peerConnection.getSenders().forEach((sender) => {
               sender.replaceTrack(
@@ -645,6 +682,7 @@ function Meeting() {
   }, [])
 
   // Handle create peerConnection for other peers
+  const [otherPeerRealtime, setOtherPeerRealtime] = useState([])
   useEffect(() => {
     if (otherPeers.current.length > 0) {
       console.log("User joined, start creating peers!")
@@ -654,7 +692,9 @@ function Meeting() {
         }
       })
     }
+    setOtherPeerRealtime(otherPeers.current)
   }, [otherPeers.current])
+  console.log("sss", otherPeers.current)
 
   // window.onbeforeunload = (e) => {
   //   sendToServer({
@@ -665,10 +705,12 @@ function Meeting() {
   //   })
   //   return
   // }
-  const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
+
+
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
-      <Whiteboard visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)}/>
+      {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
+      <Whiteboard  visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime}/>
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
