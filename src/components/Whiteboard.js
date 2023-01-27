@@ -4,7 +4,7 @@ import { SketchPicker } from 'react-color'
 import { useDispatch, useSelector } from 'react-redux'
 import { addPoint } from '../redux/slices/DrawSlice'
 
-const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
+const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
   let contextRef = useRef()
   // let contextBufferedRef = useRef()
   let lastPoint = useRef()
@@ -93,18 +93,22 @@ const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
         x: x,
         y: y,
         eraser: eraser.current,
-        force: force,
+        // force: force,
         color: (eraser.current) ? 'white' : color
       }
       // }
 
       draw(dataRaw)
 
-      connection.emit("drawing", JSON.stringify(dataRaw))
-      
-      let arr = arrPoint.current
-      arr.push(dataRaw)
-      arrPoint.current = [...arr]
+      connection.emit("message", JSON.stringify({
+        type: 'drawing',
+        roomId,
+        data: dataRaw
+      }))
+
+      // let arr = arrPoint.current
+      // arr.push(dataRaw)
+      // arrPoint.current = [...arr]
 
       dispatch(addPoint({
         data: dataRaw
@@ -135,6 +139,12 @@ const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
       contextRef.current =  canvasRef.current.getContext('2d')
       contextRef.current.clearRect(0, 0,  canvasRef.current.width,  canvasRef.current.height);
       
+      // arrPoint.current?.map(item => {
+      //   draw(item)
+      // })
+      store?.arrPoint?.map(item => {
+        draw(item)
+      })
       // if (data !== undefined && data !== null) {
       //   data.map(item => {
       //     draw(item)
@@ -149,9 +159,12 @@ const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
 
     colorRef.current = randomColor()
 
-    arrPoint.current?.map(item => {
+    store?.arrPoint?.map(item => {
       draw(item)
     })
+    // arrPoint.current?.map(item => {
+    //   draw(item)
+    // })
 
     window.onresize = changeSizeWindow
 
@@ -159,9 +172,9 @@ const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
     otherPeers?.map(item => {
       const dataChannel = item.dataChannel
       dataChannel.onmessage = (event) => {
-        let arr = arrPoint.current
-        arr.push(JSON.parse(event.data))
-        arrPoint.current = arr
+        // let arr = arrPoint.current
+        // arr.push(JSON.parse(event.data))
+        // arrPoint.current = arr
         dispatch(addPoint({
           data: JSON.parse(event.data)
         }))
@@ -170,6 +183,18 @@ const Whiteboard = ({visible, setVisible, otherPeers, connection}) => {
     })
   })
   
+  let countChange = useRef(0)
+  useEffect(() => {
+    if (countChange.current < 2) {
+      console.log("!!!", store.arrPoint)
+      store?.arrPoint?.map(item => {
+        draw(item)
+      })
+    }
+    if (store?.arrPoint?.length > 0) 
+      countChange.current = 2
+  }, [store])
+
   return (
     <>
     {

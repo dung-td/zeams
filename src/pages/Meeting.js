@@ -41,6 +41,7 @@ import {
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
 import Whiteboard from "../components/Whiteboard.js"
+import { setPoints } from "../redux/slices/DrawSlice.js"
 
 const isVoiceOnly = false
 
@@ -226,6 +227,9 @@ function Meeting() {
               }
             })
             otherPeers.current = arr
+            dispatch(setPoints({
+              data: obj.data.points
+            }))
             setInitialising(false)
           }
           break
@@ -357,7 +361,7 @@ function Meeting() {
       otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
         // ordered: false, // do not guarantee order
         // maxPacketLifeTime: 3000, // in milliseconds
-        maxPacketLifeTime: 5000,
+        maxPacketLifeTime: 25000,
         negotiated: true, 
         ordered: true,
         id: 1
@@ -710,7 +714,7 @@ function Meeting() {
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
-      <Whiteboard  visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"

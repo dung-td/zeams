@@ -11,9 +11,12 @@ const drawSlice = createSlice({
         ...state.arrPoint,
         action.payload.data
       ]
+    },
+    setPoints: (state, action) => {
+      state.arrPoint = [...action.payload.data]
     }
   }
 })
 
-export const {addPoint} = drawSlice.actions
+export const {addPoint, setPoints} = drawSlice.actions
 export default drawSlice.reducer
