@@ -3,8 +3,8 @@ import React from "react"
 export const Background = (props) => {
   const { applyEffect } = props
   const { changeSize } = props
+  const { setSidebar } = props
   const { applyMask } = props
-
   const apply = (background) => {
     applyEffect("background", background)
   }
@@ -13,7 +13,12 @@ export const Background = (props) => {
     <div className="flex bg-white p-4 rounded-md h-full">
       <div className="w-full flex flex-col justify-between">
         <div>
-          <p className="font-bold text-md">Background</p>
+          <div className="flex justify-between">
+            <p className="font-bold text-md">Background</p>
+            <span className="material-icons cursor-pointer"
+              onClick={() => setSidebar("")}
+            >close</span>
+          </div>
           <div className="mt-2">
             <canvas className="h-full w-full rounded-md" id="canvasTesting" />
           </div>
