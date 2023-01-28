@@ -43,6 +43,7 @@ import {
 import Whiteboard from "../components/Whiteboard.js"
 import { setPoints } from "../redux/slices/DrawSlice.js"
 import { changeSizeMask, startMask } from "../faceMask.js"
+import { updateMessages } from "../redux/slices/ChatSlice.js"
 
 const isVoiceOnly = false
 
@@ -61,8 +62,8 @@ function Meeting() {
   const processedLocalStreamRefCache = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
-  let userId = useSelector(selectUserId)
-  let userName = useSelector(selectUsername)
+  const userId = useSelector(selectUserId)
+  const userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
   const [docRef, setDocRef] = useState("")
 
@@ -239,6 +240,13 @@ function Meeting() {
             dispatch(setPoints({
               data: obj.data.points
             }))
+            
+            dispatch(
+              updateMessages({
+                messages: obj.data?.chats
+              })
+            )
+
             setInitialising(false)
           }
           break
@@ -588,7 +596,14 @@ function Meeting() {
   const renderSidebar = (param) => {
     switch (param) {
       case "chat":
-        return <Chat />
+        return (
+          <Chat
+            roomId={roomId}
+            userName={userName}
+            connection={connection}
+            otherPeers={otherPeers.current}
+          />
+        )
       case "attend":
         return <Attend otherPeers={otherPeers.current} local={userId} />
       default:
@@ -819,6 +834,7 @@ function Meeting() {
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
       <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"

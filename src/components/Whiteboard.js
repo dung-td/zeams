@@ -172,13 +172,19 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
     otherPeers?.map(item => {
       const dataChannel = item.dataChannel
       dataChannel.onmessage = (event) => {
+        const data = JSON.parse(event.data)
+
+        if (data.x) {
+          dispatch(addPoint({
+            data: data
+          }))
+
+          draw(data)
+        }
+        
         // let arr = arrPoint.current
         // arr.push(JSON.parse(event.data))
         // arrPoint.current = arr
-        dispatch(addPoint({
-          data: JSON.parse(event.data)
-        }))
-        draw(JSON.parse(event.data))
       };
     })
   })
