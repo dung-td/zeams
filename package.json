@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@mediapipe/drawing_utils": "^0.3.1620248257",
+    "@mediapipe/face_mesh": "^0.4.1633559619",
     "@mediapipe/selfie_segmentation": "^0.1.1632777926",
     "@reduxjs/toolkit": "^1.9.0",
     "@tensorflow-models/body-segmentation": "^1.0.1",

@@ -4,11 +4,6 @@ import { useDispatch, useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
 import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
-import "@tensorflow/tfjs-core"
-import "@tensorflow/tfjs-backend-webgl"
-import * as bodySegmentation from "@tensorflow-models/body-segmentation"
-import "@mediapipe/selfie_segmentation"
-import "@tensorflow/tfjs-converter"
 
 import {
   changeSize,
@@ -25,6 +20,10 @@ import {
   addPeer,
   selectOtherPeers,
   removePeer,
+  selectAudio,
+  selectVideo,
+  updateAudio,
+  updateVideo,
 } from "../redux/slices/ConnectionSlice"
 import {
   selectUserId,
@@ -40,10 +39,12 @@ import {
   SERVERS,
   SESSION_CONSTRAINTS,
 } from "../constants/index.js"
+
 import Whiteboard from "../components/Whiteboard.js"
 import { setPoints } from "../redux/slices/DrawSlice.js"
 
 const isVoiceOnly = false
+import { changeSizeMask, startMask } from "../faceMask.js"
 
 function Meeting() {
   const navigate = useNavigate()
@@ -64,8 +65,8 @@ function Meeting() {
   const [others, setOthers] = useState([])
   const [docRef, setDocRef] = useState("")
 
-  const [isMicOn, setIsMicOn] = useState(true)
-  const [isCamOn, setIsCamOn] = useState(true)
+  const isMicOn = useSelector(selectAudio)
+  const isCamOn = useSelector(selectVideo)
   const [isUsingEffect, setIsUsingEffect] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
   const [sidebar, setSidebar] = useState("")
@@ -78,6 +79,10 @@ function Meeting() {
 
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
+  const [focusMode, setFocusMode] = useState(false)
+  const focusStreamRef = useRef()
+  const [focusModeCache, setFocusModeCache] = useState("")
+  const [focusName, setFocusName] = useState("")
 
   const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
@@ -109,7 +114,10 @@ function Meeting() {
   const preLoadLocalStream = () => {
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
-      localStreamRef.current.srcObject = stream
+      // localStreamRef.current.srcObject = stream
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
     })
   }
 
@@ -549,7 +557,9 @@ function Meeting() {
     dispatch(addPeer({ peer: videoContainer.outerHTML }))
 
     setTimeout(() => {
-      updateLayoutRef.current()
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
     }, 500)
   }
 
@@ -568,7 +578,9 @@ function Meeting() {
     dispatch(removePeer({ index: index }))
 
     setTimeout(() => {
-      updateLayoutRef.current()
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
     }, 5)
   }
 
@@ -638,6 +650,27 @@ function Meeting() {
     })
   }
 
+  const applyMask = async () => {
+    const videoElement = document.getElementsByClassName("localStreamRef")[0]
+    const canvasElement = document.getElementById("canvasTesting")
+    // if (option === "") {
+    //   removeBackground(videoElement, canvasElement)
+    // } else {
+    //   if (option === "background") {
+    //     setBackground(backgroundImage)
+    //   }
+
+    await startMask(videoElement, canvasElement).catch((err) =>
+      console.error(err)
+    )
+
+    changeSizeMask(videoElement.offsetHeight, videoElement.offsetWidth)
+
+    canvasElement.height = videoElement.offsetHeight
+    canvasElement.width = videoElement.offsetWidth
+    // }
+  }
+
   const startCaptureScreen = () => {
     navigator.mediaDevices
       .getDisplayMedia(DISPLAY_MEDIA_CONSTRAINTS)
@@ -674,6 +707,51 @@ function Meeting() {
       })
   }
 
+  const setFocus = (stream, name, elementId) => {
+    setFocusMode(true)
+    setFocusModeCache(elementId)
+
+    setTimeout(() => {
+      let focusStreamElement = document.getElementById("focusStream")
+
+      focusStreamElement.srcObject = stream
+    }, 1000)
+
+    setFocusName(name)
+  }
+
+  const unsetFocus = () => {
+    let focusStreamElement = document.getElementById("focusStream")
+    let source = focusStreamElement.srcObject
+    setFocusMode(false)
+
+    setTimeout(() => {
+      let originFocusElement = document.getElementById(focusModeCache)
+      console.log("Origin:" + focusModeCache)
+      console.log("Origin:" + originFocusElement.srcObject)
+
+      originFocusElement.srcObject = source
+      originFocusElement.play()
+    }, 1000)
+  }
+
+  const getNewMediaStream = () => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }
+
   // initialize socket-io connection
   useEffect(() => {
     preLoadLocalStream()
@@ -684,6 +762,31 @@ function Meeting() {
       handleCleanUpConnection("all")
     }
   }, [])
+
+  useEffect(() => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }, [isCamOn])
+
+  useEffect(() => {
+    // if (localStreamRef.current) {
+    //   localStreamRef.current.getAudioTrack().forEach((track) => {
+    //     track.enabled = !track.enabled
+    //   })
+    // }
+  }, [isMicOn])
 
   // Handle create peerConnection for other peers
   const [otherPeerRealtime, setOtherPeerRealtime] = useState([])
@@ -729,61 +832,131 @@ function Meeting() {
             applyEffect={applyEffect}
             changeSize={changeEffectSizeAndApply}
             setSidebar={(value) => setSidebar(value)}
+            applyMask={applyMask}
           />
         </div>
 
-        <PackedGrid
-          id="layout"
-          boxAspectRatio={aspectRatio}
-          // className="fullscreen"
-          updateLayoutRef={updateLayoutRef}
-          // id="layer"
-          className={`${
-            sidebar !== "" ? "w-9/12 " : "w-full "
-          } flex flex-row  max-h-screen layer`}
-        >
-          <div id="localStreamRefDiv" className="h-full p-2 ">
-            <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
-              <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                You
-              </p>
-              <video
-                id="localStream"
-                className="localStreamRef absolute w-full"
-                ref={localStreamRef}
-                autoPlay
-                muted
-              />
-              <video
-                id="processedLocalStream"
-                className="processedLocalStream absolute w-full"
-                ref={processedLocalStreamRef}
-                autoPlay
-                muted
-              />
-              {/* <video
-                id="processedLocalStreamCache"
-                className="processedLocalStreamCache absolute w-full"
-                ref={processedLocalStreamRefCache}
-                autoPlay
-                muted
-              /> */}
+        {focusMode ? (
+          // FOCUS MODE
+          <div
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer p-8`}
+          >
+            <div className="w-full h-full flex flex-row justify-center items-center gap-4">
+              <div
+                className="relative w-11/12 h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden"
+                onClick={() => {
+                  unsetFocus()
+                }}
+              >
+                <video
+                  id="focusStream"
+                  className="w-full h-full"
+                  autoPlay
+                  muted
+                />
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  {focusName}
+                </p>
+              </div>
+
+              <div className="w-1/12 h-full rounded-md flex flex-col justify-center items-center gap-4 text-white">
+                {peers.map((index) => {
+                  if (index > 5) {
+                    return null
+                  } else if (index === 5) {
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center text-2xl">
+                        +5
+                      </div>
+                    )
+                  } else
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center">
+                        <span className="material-icons text-3xl">
+                          perm_identity
+                        </span>
+                      </div>
+                    )
+                })}
+              </div>
             </div>
           </div>
-
-          {peers.map((peerHTML, index) => {
-            return (
-              <div key={index} className="h-full p-2">
-                <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
-                  {parse(peerHTML)}
-                  <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-                    {otherPeers.current[index].name}
-                  </p>
-                </div>
+        ) : (
+          <PackedGrid
+            id="layout"
+            boxAspectRatio={aspectRatio}
+            updateLayoutRef={updateLayoutRef}
+            // id="layer"
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer`}
+          >
+            <div
+              id="localStreamRefDiv"
+              className="h-full p-2 "
+              onClick={() => {
+                setFocus(localStreamRef.current.srcObject, "You", "localStream")
+              }}
+            >
+              <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  You
+                </p>
+                {isCamOn ? (
+                  <>
+                    <video
+                      id="localStream"
+                      className="localStreamRef absolute w-full"
+                      ref={localStreamRef}
+                      autoPlay
+                      muted
+                    />
+                    <video
+                      id="processedLocalStream"
+                      className="processedLocalStream absolute w-full"
+                      ref={processedLocalStreamRef}
+                      autoPlay
+                      muted
+                    />
+                  </>
+                ) : (
+                  <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                    <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+                      <span className="material-icons text-5xl">
+                        perm_identity
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-            )
-          })}
-        </PackedGrid>
+            </div>
+
+            {peers.map((peerHTML, index) => {
+              return (
+                <div
+                  key={index}
+                  className="h-full p-2"
+                  onClick={() => {
+                    setFocus(
+                      otherPeers.current[index].remoteStream,
+                      otherPeers.current[index].name,
+                      "remoteStream" + otherPeers.current[index].id
+                    )
+                  }}
+                >
+                  <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                    {parse(peerHTML)}
+                    <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                      {otherPeers.current[index].name}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </PackedGrid>
+        )}
 
         <div
           className={
@@ -805,7 +978,11 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                setIsMicOn(!isMicOn)
+                dispatch(
+                  updateAudio({
+                    audio: !isMicOn,
+                  })
+                )
               }}
             >
               {isMicOn ? "mic" : "mic_off"}
@@ -816,7 +993,11 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                setIsCamOn(!isCamOn)
+                dispatch(
+                  updateVideo({
+                    video: !isCamOn,
+                  })
+                )
               }}
             >
               {isCamOn ? "videocam" : "videocam_off"}
@@ -881,6 +1062,7 @@ function Meeting() {
             >
               <span className="material-icons text-white ">more_vert</span>
             </div>
+
           </div>
           
           <div
@@ -915,7 +1097,9 @@ function Meeting() {
               }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >
@@ -934,7 +1118,9 @@ function Meeting() {
               }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >

@@ -3,6 +3,8 @@ import { createSlice } from "@reduxjs/toolkit"
 const initialState = {
   otherPeers: [],
   localStream: undefined,
+  audio: true,
+  video: true,
 }
 
 export const connectionSlice = createSlice({
@@ -21,14 +23,28 @@ export const connectionSlice = createSlice({
     removePeer: (state, action) => {
       state.otherPeers.splice(action.payload.index, 1)
     },
+    updateAudio: (state, action) => {
+      state.audio = action.payload.audio
+    },
+    updateVideo: (state, action) => {
+      state.video = action.payload.video
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { updateLocalStream, updateOtherPeers, addPeer, removePeer } =
-  connectionSlice.actions
+export const {
+  updateLocalStream,
+  updateOtherPeers,
+  addPeer,
+  removePeer,
+  updateAudio,
+  updateVideo,
+} = connectionSlice.actions
 
 export const selectOtherPeers = (state) => state.connection.otherPeers
 export const selectLocalStream = (state) => state.connection.localStream
+export const selectAudio = (state) => state.connection.audio
+export const selectVideo = (state) => state.connection.video
 
 export default connectionSlice.reducer
