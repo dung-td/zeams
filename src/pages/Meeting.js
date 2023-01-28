@@ -1,8 +1,17 @@
 import { useParams } from "react-router-dom"
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
+import { useNavigate } from "react-router-dom"
 import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
+
+import {
+  changeSize,
+  segment,
+  setBackground,
+  start,
+  turnOffSegment,
+} from "../segment.mjs"
 import { connection } from "../utils"
 import {
   selectLocalStream,
@@ -10,37 +19,37 @@ import {
   updateOtherPeers,
   addPeer,
   selectOtherPeers,
+  removePeer,
+  selectAudio,
+  selectVideo,
+  updateAudio,
+  updateVideo,
 } from "../redux/slices/ConnectionSlice"
-import { selectUserId } from "../redux/slices/AuthenticationSlice"
+import {
+  selectUserId,
+  selectUsername,
+} from "../redux/slices/AuthenticationSlice"
+import { Chat } from "../components/Chat.js"
+import { Attend } from "../components/Attend.js"
+import { Background } from "../components/setting/Background.js"
+
+import {
+  DISPLAY_MEDIA_CONSTRAINTS,
+  MEDIA_CONSTRAINTS,
+  SERVERS,
+  SESSION_CONSTRAINTS,
+} from "../constants/index.js"
+
+import Whiteboard from "../components/Whiteboard.js"
+import { setPoints } from "../redux/slices/DrawSlice.js"
+import { changeSizeMask, startMask } from "../faceMask.js"
 
 const isVoiceOnly = false
-const servers = {
-  iceServers: [
-    {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    },
-  ],
 
-  iceCandidatePoolSize: 10,
-}
-const mediaConstraints = {
-  audio: {
-    echoCancellation: true,
-    noiseSuppression: true,
-  },
-  video: {
-    frameRate: 60,
-    facingMode: "user", // 'user'
-    width: { min: 600, ideal: 1920, max: 600 },
-    height: { min: 300, ideal: 1080, max: 400 },
-  },
-}
-const sessionConstraints = {
-  offerToReceiveAudio: true,
-  offerToReceiveVideo: true,
-}
 
 function Meeting() {
+  const navigate = useNavigate()
+
   const { roomId } = useParams()
   const { action } = useParams()
   const { roomRef } = useParams()
@@ -48,19 +57,22 @@ function Meeting() {
 
   const peers = useSelector(selectOtherPeers)
   const localStreamRef = useRef()
+  const processedLocalStreamRef = useRef()
+  const processedLocalStreamRefCache = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
   let userId = useSelector(selectUserId)
+  let userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
-  const [muted, setMuted] = useState(false)
   const [docRef, setDocRef] = useState("")
 
-  const [isMicOn, setIsMicOn] = useState(true)
-  const [isCamOn, setIsCamOn] = useState(true)
+  const isMicOn = useSelector(selectAudio)
+  const isCamOn = useSelector(selectVideo)
+  const [isUsingEffect, setIsUsingEffect] = useState(false)
   const [isSharing, setIsSharing] = useState(false)
-  const [isOpenSideBar, setIsOpenSideBar] = useState(false)
-  const [isOpenChat, setIsOpenChat] = useState(false)
-  const [isOpenAttend, setIsOpenAttend] = useState(false)
+  const [sidebar, setSidebar] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const [initialising, setInitialising] = useState(true)
   const [camAmount, setCamAmount] = useState()
@@ -68,6 +80,15 @@ function Meeting() {
 
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
+  const [focusMode, setFocusMode] = useState(false)
+  const focusStreamRef = useRef()
+  const [focusModeCache, setFocusModeCache] = useState("")
+  const [focusName, setFocusName] = useState("")
+
+  const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
+  const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
+
+  console.log('++', peers)
 
   const deepClonePeers = () => {
     // dispatch(
@@ -83,7 +104,7 @@ function Meeting() {
     for (let i = 0; i < otherPeers.current.length; i++) {
       const peer = otherPeers.current[i]
 
-      if (peer.id === msg.sender) {
+      if (peer.id === msg.sender.id) {
         result = i
         break
       }
@@ -92,14 +113,17 @@ function Meeting() {
   }
 
   const preLoadLocalStream = () => {
-    navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
-      localStreamRef.current.srcObject = stream
+      // localStreamRef.current.srcObject = stream
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
     })
   }
 
   const handleCleanUpConnection = (which) => {
-    if (which == "all") {
+    if (which === "all") {
       if (otherPeers.current.length > 0) {
         otherPeers.current?.forEach((item) => {
           item.peerConnection?.removeEventListener("track", () => null)
@@ -123,25 +147,6 @@ function Meeting() {
           item.peerConnection?.close()
           item.peerConnection = null
         })
-        // others?.forEach(item => {
-        //   item.peerConnection?.removeEventListener('track', () => null)
-        //   item.peerConnection?.removeEventListener('icecandidate', () => null)
-        //   item.peerConnection?.removeEventListener('negotiationneeded', () => null)
-        //   item.peerConnection?.removeEventListener('connectionstatechange', () => null)
-        //   item.peerConnection?.removeEventListener('iceconnectionstatechange', () => null)
-
-        //   item.peerConnection?.getTransceivers()?.forEach(transceiver => {
-        //     transceiver.stop()
-        //   })
-        //   item.peerConnection?.close()
-        //   item.peerConnection = null
-        // })
-
-        if (localStream) {
-          localStream.getTracks().map((track) => {
-            track.stop()
-          })
-        }
 
         connection.off()
         connection.removeAllListeners()
@@ -182,27 +187,12 @@ function Meeting() {
       otherPeers.current[which]?.peerConnection?.close()
       otherPeers.current[which].peerConnection = undefined
 
-      // others[which]?.peerConnection?.removeEventListener('track', () => null)
-      // others[which]?.peerConnection?.removeEventListener('icecandidate', () => null)
-      // others[which]?.peerConnection?.removeEventListener('negotiationneeded', () => null)
-      // others[which]?.peerConnection?.removeEventListener('connectionstatechange', () => null)
-      // others[which]?.peerConnection?.removeEventListener('iceconnectionstatechange', () => null)
-
-      // others[which]?.peerConnection?.getTransceivers()?.forEach(transceiver => {
-      //   transceiver.stop()
-      // })
-      // others[which]?.peerConnection?.close()
-      // others[which].peerConnection = undefined
-
-      if (localStream) {
-        localStream.getTracks().map((track) => {
-          track.stop()
-        })
-      }
-
       otherPeers.current.splice(which, 1)
+
+      console.log("-------Clean up connection------")
       deepClonePeers()
     }
+
     deepClonePeers()
   }
 
@@ -216,7 +206,10 @@ function Meeting() {
       roomId: roomId,
       roomRef: roomRef,
       data: {
-        sender: userId,
+        sender: {
+          id: userId,
+          name: userName,
+        },
       },
       create: action === "in" ? false : true,
     })
@@ -228,31 +221,36 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver != null && obj.data.receiver === userId) {
+          if (obj.data.receiver !== null && obj.data.receiver === userId) {
             setDocRef(obj.data.docRef)
-
             let arr = []
             obj.data.participants.forEach((person) => {
-              if (person != userId) {
+              console.log(obj.data)
+              if (person.id !== userId) {
                 arr.push({
-                  id: person,
+                  id: person.id,
+                  name: person.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
               }
             })
             otherPeers.current = arr
+            dispatch(setPoints({
+              data: obj.data.points
+            }))
             setInitialising(false)
           }
           break
         case "offer":
           try {
-            if (obj.receiver == userId) {
+            if (obj.receiver === userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -264,11 +262,11 @@ function Meeting() {
               }
 
               if (
-                obj.data !=
+                obj.data !==
                 otherPeers.current[index].peerConnection?.localDescription
               ) {
                 if (
-                  otherPeers.current[index].peerConnection.signalingState !=
+                  otherPeers.current[index].peerConnection.signalingState !==
                   "stable"
                 ) {
                   await Promise.all([
@@ -287,7 +285,7 @@ function Meeting() {
               }
 
               otherPeers.current[index].peerConnection
-                ?.createAnswer(sessionConstraints)
+                ?.createAnswer(SESSION_CONSTRAINTS)
                 .then((answerDescription) => {
                   otherPeers.current[index].peerConnection?.setLocalDescription(
                     answerDescription
@@ -296,7 +294,10 @@ function Meeting() {
                   sendToServer({
                     type: "answer",
                     roomId: roomId,
-                    sender: userId,
+                    sender: {
+                      id: userId,
+                      name: userName,
+                    },
                     receiver: otherPeers.current[index]?.id,
                     data: answerDescription,
                   })
@@ -305,12 +306,13 @@ function Meeting() {
           } catch (e) {}
           break
         case "answer":
-          if (obj.receiver == userId) {
+          if (obj.receiver === userId) {
             const check = findOfferIndex(obj)
 
             if (check < 0) {
               otherPeers.current.push({
-                id: obj.sender,
+                id: obj.sender.id,
+                name: obj.sender.name,
                 remoteStream: undefined,
                 peerConnection: undefined,
               })
@@ -326,12 +328,13 @@ function Meeting() {
             const check = findOfferIndex(obj)
 
             if (
-              obj.receiver == userId &&
-              obj.sender == otherPeers.current[check].id
+              obj.receiver === userId &&
+              obj.sender.id === otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
-                  id: obj.sender,
+                  id: obj.sender.id,
+                  name: obj.sender.name,
                   remoteStream: undefined,
                   peerConnection: undefined,
                 })
@@ -347,6 +350,7 @@ function Meeting() {
           break
         case "hang-up":
           const index = findOfferIndex(obj)
+          removeRemoteStreamFromView(index)
           handleCleanUpConnection(index)
           break
         default:
@@ -360,10 +364,43 @@ function Meeting() {
   }
 
   const createPeerConnection = (index) => {
+    // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
-      otherPeers.current[index].peerConnection = new RTCPeerConnection(servers)
+      otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
+      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+        // ordered: false, // do not guarantee order
+        // maxPacketLifeTime: 3000, // in milliseconds
+        maxPacketLifeTime: 25000,
+        negotiated: true, 
+        ordered: true,
+        id: 1
+      })
+      // paint
+      const dataChannel = otherPeers.current[index].dataChannel
+      
+      dataChannel.onerror = (error) => {
+        console.log("Data Channel Error:", error);
+      };
+      
+      dataChannel.onmessage = (event) => {
+        // let arr = otherPeerDrawData
+        // arr.push(
+        //   JSON.parse(event.data)
+        // )
+        // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
+        // console.log("Got Data Channel Message:", event.data);
+      };
+      
+      dataChannel.onopen = () => {
+        // dataChannel.send("Hello World!");
+      };
+      
+      dataChannel.onclose = () => {
+        // console.log("The Data Channel is Closed");
+      };
 
-      navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
+      // Media
+      navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
         // dispatch(updateLocalStream({ localStream: stream }))
         localStreamRef.current.srcObject = stream
         stream?.getTracks().forEach((track) => {
@@ -372,10 +409,14 @@ function Meeting() {
 
         // replace old tracks in other peers with latest tracks
         otherPeers.current.forEach((peer, idx) => {
-          if (idx != index && peer.peerConnection) {
+          if (idx !== index && peer.peerConnection) {
             console.log("REPLACE TRACK")
             peer.peerConnection.getSenders().forEach((sender) => {
-              sender.replaceTrack(stream.getVideoTracks()[0])
+              sender.replaceTrack(
+                !processedLocalStreamRef
+                  ? stream.getTracks()[0]
+                  : processedLocalStreamRef.current.srcObject.getTracks()[0]
+              )
             })
           }
         })
@@ -388,7 +429,10 @@ function Meeting() {
             sendToServer({
               type: "ice-candidate",
               roomId: roomId,
-              sender: userId,
+              sender: {
+                id: userId,
+                name: userName,
+              },
               receiver: otherPeers.current[index].id,
               data: event.candidate,
             })
@@ -400,9 +444,7 @@ function Meeting() {
         "track",
         (event) => {
           let remoteStream = new MediaStream()
-          console.log("In Track")
           if (event.streams[0]) {
-            console.log("streams[0]")
             // event.streams[0].getTracks().forEach((track) => {
             //   remoteStream.addTrack(track)
             // })
@@ -414,14 +456,33 @@ function Meeting() {
 
           let videoId = "remoteStream" + otherPeers.current[index].id
 
-          console.log(videoId)
-
           if (otherPeers.current[index].remoteStream === undefined) {
             addRemoteStreamToView(videoId)
+            otherPeers.current[index].remoteStream = new MediaStream()
           }
 
-          otherPeers.current[index].remoteStream = remoteStream
-          updateRemoteStream(remoteStream, videoId)
+          if (remoteStream.getAudioTracks()[0]) {
+            console.log(remoteStream.getAudioTracks()[0])
+            otherPeers.current[index].remoteStream.addTrack(
+              remoteStream.getAudioTracks()[0]
+            )
+          }
+
+          if (remoteStream.getVideoTracks()[0]) {
+            console.log(remoteStream.getVideoTracks()[0])
+            otherPeers.current[index].remoteStream.addTrack(
+              remoteStream.getVideoTracks()[0]
+            )
+          }
+
+          console.log(
+            otherPeers.current[index].remoteStream.getAudioTracks()[0]
+          )
+          console.log(
+            otherPeers.current[index].remoteStream.getVideoTracks()[0]
+          )
+
+          updateRemoteStream(otherPeers.current[index].remoteStream, videoId)
 
           deepClonePeers()
         }
@@ -437,7 +498,7 @@ function Meeting() {
             return
           }
           otherPeers.current[index].peerConnection
-            ?.createOffer(sessionConstraints)
+            ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
               otherPeers.current[index].peerConnection?.setLocalDescription(
                 offerDescription
@@ -446,7 +507,10 @@ function Meeting() {
               sendToServer({
                 type: "offer",
                 roomId: roomId,
-                sender: userId,
+                sender: {
+                  id: userId,
+                  name: userName,
+                },
                 receiver: otherPeers.current[index].id,
                 data: offerDescription,
               })
@@ -489,11 +553,14 @@ function Meeting() {
   const addRemoteStreamToView = (videoId) => {
     const videoContainer = document.createElement("video")
     videoContainer.id = videoId
+    videoContainer.classList.add("w-full")
 
     dispatch(addPeer({ peer: videoContainer.outerHTML }))
 
     setTimeout(() => {
-      updateLayoutRef.current()
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
     }, 500)
   }
 
@@ -503,8 +570,187 @@ function Meeting() {
       const video = document.querySelector("#" + videoId)
       video.autoplay = true
       video.srcObject = remoteStream
-      video.play()
+      // video.play()
     }, 1000)
+  }
+
+  const removeRemoteStreamFromView = (index) => {
+    console.log("Remote peer: " + index)
+    dispatch(removePeer({ index: index }))
+
+    setTimeout(() => {
+      if (!focusMode) {
+        updateLayoutRef.current()
+      }
+    }, 5)
+  }
+
+  const renderSidebar = (param) => {
+    switch (param) {
+      case "chat":
+        return <Chat />
+      case "attend":
+        return <Attend otherPeers={otherPeers.current} local={userId} />
+      default:
+        return null
+    }
+  }
+
+  const applyEffect = async (option, backgroundImage) => {
+    const videoElement = document.getElementsByClassName("localStreamRef")[0]
+    const canvasElement = document.getElementById("canvasTesting")
+    if (option === "") {
+      removeBackground(videoElement, canvasElement)
+    } else {
+      if (option === "background") {
+        setBackground(backgroundImage)
+      }
+
+      await start(videoElement, canvasElement, option).catch((err) =>
+        console.error(err)
+      )
+
+      changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
+
+      canvasElement.height = videoElement.offsetHeight
+      canvasElement.width = videoElement.offsetWidth
+    }
+  }
+
+  const removeBackground = (videoElement, canvasElement) => {
+    turnOffSegment(videoElement, canvasElement)
+
+    const processedLocalStreamElement = document.getElementById(
+      "processedLocalStream"
+    )
+
+    processedLocalStreamElement.classList.remove("z-10")
+    processedLocalStreamElement.classList.add("-z-10")
+  }
+
+  const changeEffectSizeAndApply = () => {
+    const canvasElement = document.getElementById("canvasTesting")
+
+    processedLocalStreamRef.current.srcObject = canvasElement.captureStream(30)
+
+    const processedLocalStreamElement = document.getElementById(
+      "processedLocalStream"
+    )
+
+    processedLocalStreamElement.classList.add("z-10")
+    processedLocalStreamElement.classList.remove("-z-10")
+
+    // Replace track after process for other peers
+    otherPeers.current.forEach((peer) => {
+      console.log("REPLACE TRACK")
+      peer.peerConnection.getSenders().forEach((sender) => {
+        sender.replaceTrack(
+          processedLocalStreamRef.current.srcObject.getVideoTracks()[0]
+        )
+      })
+    })
+  }
+
+  const applyMask = async () => {
+    const videoElement = document.getElementsByClassName("localStreamRef")[0]
+    const canvasElement = document.getElementById("canvasTesting")
+    // if (option === "") {
+    //   removeBackground(videoElement, canvasElement)
+    // } else {
+    //   if (option === "background") {
+    //     setBackground(backgroundImage)
+    //   }
+
+    await startMask(videoElement, canvasElement).catch((err) =>
+      console.error(err)
+    )
+
+    changeSizeMask(videoElement.offsetHeight, videoElement.offsetWidth)
+
+    canvasElement.height = videoElement.offsetHeight
+    canvasElement.width = videoElement.offsetWidth
+    // }
+  }
+
+  const startCaptureScreen = () => {
+    navigator.mediaDevices
+      .getDisplayMedia(DISPLAY_MEDIA_CONSTRAINTS)
+      .then((stream) => {
+        console.log("Start sharing screen")
+        setIsSharing(true)
+        localStreamRef.current.srcObject = stream
+
+        // replace old tracks in other peers with latest tracks
+        otherPeers.current.forEach((peer) => {
+          console.log("REPLACE TRACK")
+          peer.peerConnection.getSenders().forEach((sender) => {
+            sender.replaceTrack(stream.getVideoTracks()[0])
+          })
+        })
+
+        stream.oninactive = function () {
+          console.log("Stop sharing screen")
+          setIsSharing(false)
+          navigator.mediaDevices
+            .getUserMedia(MEDIA_CONSTRAINTS)
+            .then((stream) => {
+              localStreamRef.current.srcObject = stream
+
+              // replace old tracks in other peers with latest tracks
+              otherPeers.current.forEach((peer) => {
+                console.log("REPLACE TRACK")
+                peer.peerConnection.getSenders().forEach((sender) => {
+                  sender.replaceTrack(stream.getVideoTracks()[0])
+                })
+              })
+            })
+        }
+      })
+  }
+
+  const setFocus = (stream, name, elementId) => {
+    setFocusMode(true)
+    setFocusModeCache(elementId)
+
+    setTimeout(() => {
+      let focusStreamElement = document.getElementById("focusStream")
+
+      focusStreamElement.srcObject = stream
+    }, 1000)
+
+    setFocusName(name)
+  }
+
+  const unsetFocus = () => {
+    let focusStreamElement = document.getElementById("focusStream")
+    let source = focusStreamElement.srcObject
+    setFocusMode(false)
+
+    setTimeout(() => {
+      let originFocusElement = document.getElementById(focusModeCache)
+      console.log("Origin:" + focusModeCache)
+      console.log("Origin:" + originFocusElement.srcObject)
+
+      originFocusElement.srcObject = source
+      originFocusElement.play()
+    }, 1000)
+  }
+
+  const getNewMediaStream = () => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
   }
 
   // initialize socket-io connection
@@ -514,199 +760,211 @@ function Meeting() {
     connectServer()
 
     return () => {
-      // if (isSharing) {
-      //   stopScreenSharing()
-      // }
       handleCleanUpConnection("all")
     }
   }, [])
 
+  useEffect(() => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream !== null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }, [isCamOn])
+
+  useEffect(() => {
+    // if (localStreamRef.current) {
+    //   localStreamRef.current.getAudioTrack().forEach((track) => {
+    //     track.enabled = !track.enabled
+    //   })
+    // }
+  }, [isMicOn])
+
   // Handle create peerConnection for other peers
+  const [otherPeerRealtime, setOtherPeerRealtime] = useState([])
   useEffect(() => {
     if (otherPeers.current.length > 0) {
+      console.log("User joined, start creating peers!")
       otherPeers.current.forEach((peer, index) => {
         if (!peer.peerConnection) {
           createPeerConnection(index)
         }
       })
     }
+    setOtherPeerRealtime(otherPeers.current)
   }, [otherPeers.current])
+  console.log("sss", otherPeers.current)
 
-  useEffect(() => {
-    setIsOpenSideBar(isOpenAttend || isOpenChat)
-  }, [isOpenAttend, isOpenChat])
+  // window.onbeforeunload = (e) => {
+  //   sendToServer({
+  //     type: "hang-up",
+  //     roomId: roomId,
+  //     roomRef: docRef,
+  //     sender: userId,
+  //   })
+  //   return
+  // }
+
 
   return (
-    <div className="min-h-screen max-h-screen w-full relative bg-[#1c1f2e]">
+    <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
+      {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
+      <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
       <div
         id="parentLayout"
-        className="w-full flex flex-row min-h-screen p-8 pb-16 justify-center"
+        className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
       >
-        <PackedGrid
-          id="layout"
-          boxAspectRatio={aspectRatio}
-          // className="fullscreen"
-          updateLayoutRef={updateLayoutRef}
-          // id="layer"
-          className={`${
-            isOpenSideBar ? "w-9/12 " : "w-full "
-          } flex flex-row  max-h-screen layer`}
-        >
-          <div className="h-full flex flex-col justify-center">
-            <video ref={localStreamRef} autoPlay muted />
-          </div>
-
-          {peers.map((peerHTML) => {
-            console.log("LENGTH: " + peers.length)
-            return (
-              <div className="h-full flex flex-col justify-center object-cover overflow-hidden">
-                {parse(peerHTML)}
-              </div>
-            )
-          })}
-
-          {/* <div className="h-full flex flex-col justify-center">
-            <img src={require("../img/image1.jpg")} />
-          </div> */}
-
-          {/* <div className="h-full flex justify-center">
-            <video ref={localStreamRef} autoPlay />
-          </div>
-
-          <div className="h-full flex justify-center">
-            <video ref={localStreamRef} autoPlay />
-          </div>
-          <div className="h-full flex justify-center">
-            <video ref={localStreamRef} autoPlay />
-          </div> */}
-
-          {/* {others.map((peer) => {
-            return peer.remoteStream ? (
-              <div key={peer.id} className={`w-12/12 mx-3 my-3`}>
-                <video
-                  ref={(ref) => {
-                    if (ref) ref.srcObject = peer.remoteStream
-                  }}
-                  autoPlay
-                />
-              </div>
-            ) : null
-          })} */}
-        </PackedGrid>
-
         {/* Sidebar */}
-        <div className={isOpenSideBar ? "w-3/12" : "hidden"}>
-          {isOpenChat ? (
-            <div className="flex flex-col bg-white p-4 rounded-md h-full justify-between">
-              <div className="w-full">
-                <p className="font-bold text-xl">Chat</p>
-                <div className="my-4">
-                  <input
-                    type="text"
-                    id="first_name"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Search for people"
-                    required
-                  />
-                </div>
-                <div>
-                  <div className="flex flex-row items-center justify-between">
-                    <div className="flex flex-row mt-4 items-center">
-                      <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                      <p className="font-bold"> Tống Đức Dũng</p>
-                      <div className="ml-4 flex flex-row items-center">
-                        <p>9:00 PM</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <p> Xin chào mọi người!</p>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex flex-row items-center justify-between">
-                    <div className="flex flex-row mt-4 items-center">
-                      <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                      <p className="font-bold"> MCD</p>
-                      <div className="ml-4 flex flex-row items-center">
-                        <p>9:00 PM</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <p> Hi chào bạn!</p>
-                  </div>
-                </div>
+        <div
+          className={`absolute w-3/12 max-h-screen right-4 top-4 bottom-16 ${
+            sidebar === "background" ? "z-10" : "-z-10"
+          } `}
+        >
+          <Background
+            applyEffect={applyEffect}
+            changeSize={changeEffectSizeAndApply}
+            setSidebar={(value) => setSidebar(value)}
+            applyMask={applyMask}
+          />
+        </div>
+
+        {focusMode ? (
+          // FOCUS MODE
+          <div
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer p-8`}
+          >
+            <div className="w-full h-full flex flex-row justify-center items-center gap-4">
+              <div
+                className="relative w-11/12 h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden"
+                onClick={() => {
+                  unsetFocus()
+                }}
+              >
+                <video
+                  id="focusStream"
+                  className="w-full h-full"
+                  autoPlay
+                  muted
+                />
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  {focusName}
+                </p>
               </div>
 
-              <div className="relative">
-                <input
-                  type="text"
-                  class="bg-gray-50 border pr-10 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-                  placeholder="Enter message to send to everyone"
-                />
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-auto">
-                  <svg
-                    class="w-6 h-6"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"
-                    ></path>
-                  </svg>
-                </div>
+              <div className="w-1/12 h-full rounded-md flex flex-col justify-center items-center gap-4 text-white">
+                {peers.map((index) => {
+                  if (index > 5) {
+                    return null
+                  } else if (index === 5) {
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center text-2xl">
+                        +5
+                      </div>
+                    )
+                  } else
+                    return (
+                      <div className="rounded-full bg-gray-700 w-full h-1/5 flex items-center justify-center">
+                        <span className="material-icons text-3xl">
+                          perm_identity
+                        </span>
+                      </div>
+                    )
+                })}
               </div>
             </div>
-          ) : (
-            <div className="flex bg-white p-4 rounded-md h-full">
-              <div className="w-full">
-                <p className="font-bold text-xl">Participant</p>
-                <div className=" mt-4">
-                  <input
-                    type="text"
-                    id="first_name"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Search for people"
-                    required
-                  />
-                </div>
-                <div className="flex flex-row mt-4 items-center justify-between">
-                  <div className="flex flex-row mt-4 items-center">
-                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                    <p> Tống Đức Dũng</p>
+          </div>
+        ) : (
+          <PackedGrid
+            id="layout"
+            boxAspectRatio={aspectRatio}
+            updateLayoutRef={updateLayoutRef}
+            // id="layer"
+            className={`${
+              sidebar !== "" ? "w-9/12 " : "w-full "
+            } flex flex-row  max-h-screen layer`}
+          >
+            <div
+              id="localStreamRefDiv"
+              className="h-full p-2 "
+              onClick={() => {
+                setFocus(localStreamRef.current.srcObject, "You", "localStream")
+              }}
+            >
+              <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                  You
+                </p>
+                {isCamOn ? (
+                  <>
+                    <video
+                      id="localStream"
+                      className="localStreamRef absolute w-full"
+                      ref={localStreamRef}
+                      autoPlay
+                      muted
+                    />
+                    <video
+                      id="processedLocalStream"
+                      className="processedLocalStream absolute w-full"
+                      ref={processedLocalStreamRef}
+                      autoPlay
+                      muted
+                    />
+                  </>
+                ) : (
+                  <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                    <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+                      <span className="material-icons text-5xl">
+                        perm_identity
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-row mt-4 items-center gap-1">
-                    <span className="material-icons hover:cursor-pointer">
-                      mic_off
-                    </span>
-                    <span className="material-icons hover:cursor-pointer">
-                      videocam_off
-                    </span>
-                  </div>
-                </div>
-                <div className="flex flex-row mt-4 items-center justify-between">
-                  <div className="flex flex-row mt-4 items-center">
-                    <div className="bg-amber-500 w-8 h-8 rounded-full mr-4"></div>
-                    <p> Tống Đức Dũng</p>
-                  </div>
-                  <div className="flex flex-row mt-4 items-center gap-1">
-                    <span className="material-icons hover:cursor-pointer">
-                      mic_off
-                    </span>
-                    <span className="material-icons hover:cursor-pointer">
-                      videocam_off
-                    </span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
-          )}
+
+            {peers.map((peerHTML, index) => {
+              return (
+                <div
+                  key={index}
+                  className="h-full p-2"
+                  onClick={() => {
+                    setFocus(
+                      otherPeers.current[index].remoteStream,
+                      otherPeers.current[index].name,
+                      "remoteStream" + otherPeers.current[index].id
+                    )
+                  }}
+                >
+                  <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
+                    {parse(peerHTML)}
+                    <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
+                      {otherPeers.current[index].name}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </PackedGrid>
+        )}
+
+        <div
+          className={
+            sidebar !== "" ? "w-3/12 flex flex-row  max-h-screen" : "hidden"
+          }
+        >
+          {renderSidebar(sidebar)}
         </div>
       </div>
 
@@ -717,37 +975,109 @@ function Meeting() {
         <div className="text-white font-xl font-bold ">{roomId}</div>
 
         <div className="flex flex-row gap-4">
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span
               className="material-icons text-white"
               onClick={() => {
-                setIsMicOn(!isMicOn)
+                dispatch(
+                  updateAudio({
+                    audio: !isMicOn,
+                  })
+                )
               }}
             >
               {isMicOn ? "mic" : "mic_off"}
             </span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span
-              className="material-icons text-white mr-2"
+              className="material-icons text-white"
               onClick={() => {
-                setIsCamOn(!isCamOn)
+                dispatch(
+                  updateVideo({
+                    video: !isCamOn,
+                  })
+                )
               }}
             >
               {isCamOn ? "videocam" : "videocam_off"}
             </span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
 
-          <div className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md mx-8 hover:bg-red-700 hover:cursor-pointer">
-            <p className="text-white">End Meeting</p>
+          <div
+            className="bg-[#BF3325] flex justify-center items-center px-8 py-1 rounded-md hover:bg-red-700 hover:cursor-pointer"
+            onClick={() => {
+              console.log("Leaving...")
+              sendToServer({
+                type: "hang-up",
+                roomId: roomId,
+                roomRef: docRef,
+                sender: userId,
+              })
+
+              navigate(`/`)
+            }}
+          >
+            <p className="text-white">Leave Meeting</p>
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
-            <span className="material-icons text-white mr-2">screen_share</span>
-            <span className="material-icons text-white">expand_less</span>
+          <div className="relative">
+            {
+              showMore && (
+                <div className="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
+                  top: '-100px',
+                  width: '150px'
+                }}>
+                  <div className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center"
+                    onClick={() => {
+                      setSidebar("background")
+                      setShowMore(false)
+                      setTimeout(() => {
+                        updateLayoutRef.current()
+                      }, 1)
+                    }}
+                  >
+                    <span className="material-icons hover:text-white pr-1">blur_linear</span>
+                    Background
+                  </div>
+                  <div 
+                    className="p-2 hover:bg-[#0e78f8] text-center hover:text-white flex justify-center"
+                    onClick={() => {
+                      setVisibleWhiteboard(!visibleWhiteboard)
+                      setSidebar("")
+                      setShowMore(false)
+                    }}
+                  >
+                    <span className="material-icons hover:text-white pr-1">color_lens</span>
+                    White board
+                  </div>
+                </div>
+              )
+            }
+            <div
+              className="relative bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600"
+              onClick={() => {
+                setShowMore(!showMore)
+              }}
+            >
+              <span className="material-icons text-white ">more_vert</span>
+            </div>
+
           </div>
-          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer ">
+          
+          <div
+            className={`${
+              isSharing ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600`}
+            onClick={() => {
+              startCaptureScreen()
+            }}
+          >
+            <span className="material-icons text-white">screen_share</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
+          </div>
+          <div className="bg-[#242736] justify-center flex items-center p-2 rounded-xl hover:cursor-pointer border border-gray-700 hover:border-gray-600">
             <span className="material-icons text-white mr-2">
               radio_button_checked
             </span>
@@ -758,34 +1088,75 @@ function Meeting() {
         <div className="flex flex-row gap-2">
           <div
             className={`${
-              isOpenAttend ? "bg-[#0e78f8]" : "bg-[#242736]"
-            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
+              sidebar === "attend" ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } justify-center flex items-center p-2 rounded-full border border-gray-600 hover:cursor-pointer`}
             onClick={() => {
-              setIsOpenAttend(!isOpenAttend)
-              setIsOpenChat(false)
+              if (sidebar == "attend") {
+                setSidebar("")
+              } else {
+                setSidebar("attend")
+              }
 
               setTimeout(() => {
-                updateLayoutRef.current()
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
               }, 1)
             }}
           >
-            <span className="material-icons text-white mr-2">people</span>
-            <span className="material-icons text-white">expand_less</span>
+            <span className="material-icons text-white">people</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
           <div
             className={`${
-              isOpenChat ? "bg-[#0e78f8]" : "bg-[#242736]"
-            } justify-center flex items-center p-2 rounded-xl hover:cursor-pointer`}
+              sidebar === "chat" ? "bg-[#0e78f8]" : "bg-[#242736]"
+            } justify-center flex items-center p-2 rounded-full border border-gray-600 hover:cursor-pointer`}
             onClick={() => {
-              setIsOpenChat(!isOpenChat)
-              setIsOpenAttend(false)
+              if (sidebar == "chat") {
+                setSidebar("")
+              } else {
+                setSidebar("chat")
+              }
+
+              setTimeout(() => {
+                if (!focusMode) {
+                  updateLayoutRef.current()
+                }
+              }, 1)
             }}
           >
             <span className="material-icons text-white">question_answer</span>
-            <span className="material-icons text-white">expand_less</span>
+            {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
         </div>
       </div>
+
+      {/* Loading */}
+      {isLoading ? (
+        <div
+          id="loadingIcon"
+          class="text-center absolute top-0 w-full h-full z-20 bg-slate-400/40"
+        >
+          <div className="h-full flex flex-col items-center justify-center">
+            <svg
+              className="inline m-2 w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+              viewBox="0 0 100 101"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+                fill="currentColor"
+              />
+              <path
+                d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+                fill="currentFill"
+              />
+            </svg>
+            <span className="text-white">Loading...</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

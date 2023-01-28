@@ -2,10 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
-video {
+/* video, img {
   width: 100% !important;
   height: 100% !important;
-}
+} */
 
 body {
   margin: 0;
@@ -20,3 +20,5 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+
