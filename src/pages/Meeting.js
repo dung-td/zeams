@@ -42,9 +42,10 @@ import {
 
 import Whiteboard from "../components/Whiteboard.js"
 import { setPoints } from "../redux/slices/DrawSlice.js"
+import { changeSizeMask, startMask } from "../faceMask.js"
 
 const isVoiceOnly = false
-import { changeSizeMask, startMask } from "../faceMask.js"
+
 
 function Meeting() {
   const navigate = useNavigate()
