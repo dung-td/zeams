@@ -4,7 +4,7 @@ export const Background = (props) => {
   const { applyEffect } = props
   const { changeSize } = props
   const { setSidebar } = props
-
+  const { applyMask } = props
   const apply = (background) => {
     applyEffect("background", background)
   }
@@ -82,6 +82,18 @@ export const Background = (props) => {
                   src={require("../../img/background3.jpeg")}
                   alt="background"
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-4 font-medium">
+            <p>Mask</p>
+            <div className="flex flex-row flex-nowrap justify-center items-center gap-4 px-2 mt-2">
+              <div
+                className="flex w-4/12 text-center border border-gray-600 p-4 rounded-md justify-center items-center hover:text-blue-400 hover:border-blue-400 hover:cursor-pointer"
+                onClick={() => applyMask()}
+              >
+                <span className="material-icons ">face</span>
               </div>
             </div>
           </div>

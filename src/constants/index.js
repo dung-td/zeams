@@ -1,3 +1,6 @@
+import { useSelector } from "react-redux"
+import { selectAudio, selectVideo } from "../redux/slices/ConnectionSlice"
+
 const MY_IP_ADDRESS = "10.10.10.190"
 const SERVER_URL = `https://zeams-app.herokuapp.com/` //'http://10.10.10.190:3001'
 // const SERVER_URL = `http://localhost:3001/` //'http://10.10.10.190:3001'
@@ -32,13 +35,15 @@ export const SERVERS = {
 }
 
 export const MEDIA_CONSTRAINTS = {
-  audio: true,
-  video: {
-    frameRate: 60,
-    facingMode: "user", // 'user'
-    width: { min: 600, ideal: 1920, max: 1920 },
-    height: { min: 300, ideal: 1080, max: 1080 },
-  },
+  audio: selectAudio ? true : false,
+  video: selectVideo
+    ? {
+        frameRate: 60,
+        facingMode: "user", // 'user'
+        width: { min: 1280, max: 1280 },
+        height: { min: 720, max: 720 },
+      }
+    : false,
 }
 
 export const SESSION_CONSTRAINTS = {

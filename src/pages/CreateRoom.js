@@ -1,34 +1,31 @@
 import { useRef, useState, useEffect } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { Routes, Route, useNavigate } from "react-router-dom"
+import { MEDIA_CONSTRAINTS } from "../constants"
 
 import {
   selectUserId,
   selectUsername,
   setUsername,
 } from "../redux/slices/AuthenticationSlice"
+import {
+  selectAudio,
+  selectVideo,
+  updateAudio,
+  updateVideo,
+} from "../redux/slices/ConnectionSlice"
 import { generateRoomId } from "../utils"
-
-const mediaConstraints = {
-  audio: true,
-  video: {
-    height: 560,
-    width: 720,
-    frameRate: 60,
-    facingMode: "user", // 'user'
-  },
-}
 
 function CreatRoom() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
   const localStreamRef = useRef()
   const [roomId, setRoomId] = useState("")
-  const [isMicOn, setIsMicOn] = useState(true)
-  const [isCamOn, setIsCamOn] = useState(true)
+  const isMicOn = useSelector(selectAudio)
+  const isCamOn = useSelector(selectVideo)
   const userId = useSelector(selectUserId)
   const displayName = useSelector(selectUsername || "")
-  const [errorText, setErrorText] = useState("")
+  const [errorText, setErrorText] = useState(" ")
 
   const ERROR_TEXT = {
     BLANK: "Blank display username",
@@ -45,8 +42,6 @@ function CreatRoom() {
     navigate(`/${roomId}/create`)
   }
 
-  console.log(userId)
-
   useEffect(() => {
     setRoomId(generateRoomId())
   }, [])
@@ -55,9 +50,11 @@ function CreatRoom() {
     const gettingVideoStream = () => {
       try {
         console.log("Get user media")
-        navigator.mediaDevices.getUserMedia(mediaConstraints).then((stream) => {
-          localStreamRef.current.srcObject = stream
-        })
+        navigator.mediaDevices
+          .getUserMedia(MEDIA_CONSTRAINTS)
+          .then((stream) => {
+            localStreamRef.current.srcObject = stream
+          })
       } catch (err) {
         // Handle Error
       }
@@ -86,7 +83,7 @@ function CreatRoom() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
+    <div className="min-h-screen max-h-screen flex flex-col justify-center items-center">
       <div className="p-4 pb-2 w-2/12">
         <p className="text-white text-xl text-center">
           Meeting code: <span>{roomId}</span>
@@ -113,11 +110,18 @@ function CreatRoom() {
       </div>
 
       <div className="relative">
-        {displayName !== "" ? (
-          <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
-            {displayName}
-          </p>
-        ) : null}
+        <div className="absolute z-30 bottom-2 left-2 flex flex-row">
+          {displayName !== "" ? (
+            <p className=" text-white bg-[#242B2E] px-6 py-2 rounded-md">
+              {displayName}
+            </p>
+          ) : null}
+          {/* <div className="flex items-center justify-center bg-[#242736] p-2 rounded-xl text-white">
+            <span className="material-icons">
+              {isMicOn ? "mic" : "mic_off"}
+            </span>
+          </div> */}
+        </div>
         {isCamOn ? (
           <video
             className="rounded-xl relative"
@@ -126,9 +130,9 @@ function CreatRoom() {
             muted
           ></video>
         ) : (
-          <div className="h-[540px] w-[720px] rounded-xl flex justify-center items-center bg-[#242736]">
+          <div className="h-[720px] w-[1280px] rounded-xl flex justify-center items-center bg-[#242736]">
             <div className="text-white bg-[#242736]/70 p-20 rounded-md">
-              <span class="material-icons text-5xl">perm_identity</span>
+              <span className="material-icons text-5xl">perm_identity</span>
             </div>
           </div>
         )}
@@ -139,7 +143,12 @@ function CreatRoom() {
           <span
             className="material-icons hover:cursor-pointer"
             onClick={() => {
-              setIsMicOn(!isMicOn)
+              dispatch(
+                updateAudio({
+                  audio: !isMicOn,
+                })
+              )
+              // setIsMicOn(!isMicOn)
             }}
           >
             {isMicOn ? "mic" : "mic_off"}
@@ -150,7 +159,11 @@ function CreatRoom() {
           <span
             className="material-icons hover:cursor-pointer h-full"
             onClick={() => {
-              setIsCamOn(!isCamOn)
+              dispatch(
+                updateVideo({
+                  video: !isCamOn,
+                })
+              )
             }}
           >
             {isCamOn ? "videocam" : "videocam_off"}
