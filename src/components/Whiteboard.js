@@ -170,21 +170,23 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
 
     // 
     if (otherPeers.length > 0) {
-      otherPeers?.map(item => {
-        const handleDataChannel = (dataChannel) => {
-          // const dataChannel = item.dataChannel
-          dataChannel.onmessage = (event) => {
-            dispatch(addPoint({
-              data: JSON.parse(event.data)
-            }))
-            draw(JSON.parse(event.data))
-          };
-        }
-        if (item.dataChannel !== null) {
-          handleDataChannel(item.dataChannel)
-          item.peerConnection.ondatachannel = handleDataChannel
-        }
-      })
+      setInterval(() => {
+        otherPeers?.map(item => {
+          const handleDataChannel = (dataChannel) => {
+            // const dataChannel = item.dataChannel
+            dataChannel.onmessage = (event) => {
+              dispatch(addPoint({
+                data: JSON.parse(event.data)
+              }))
+              draw(JSON.parse(event.data))
+            };
+          }
+          if (item.dataChannel !== null) {
+            handleDataChannel(item.dataChannel)
+            item.peerConnection.ondatachannel = handleDataChannel
+          }
+        })
+      }, [300])
     }
   })
   
