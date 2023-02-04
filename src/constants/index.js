@@ -9,6 +9,7 @@ export const SERVERS = {
   iceServers: [
     {
       urls: "stun:relay.metered.ca:80",
+      // urls: "stun:stun.1.google.com:19302",
     },
     {
       urls: "turn:relay.metered.ca:80",

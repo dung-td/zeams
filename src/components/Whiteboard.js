@@ -167,20 +167,23 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
     // })
 
     window.onresize = changeSizeWindow
-
     // 
-    otherPeers?.map(item => {
-      const dataChannel = item.dataChannel
-      dataChannel.onmessage = (event) => {
-        // let arr = arrPoint.current
-        // arr.push(JSON.parse(event.data))
-        // arrPoint.current = arr
-        dispatch(addPoint({
-          data: JSON.parse(event.data)
-        }))
-        draw(JSON.parse(event.data))
-      };
-    })
+    if (otherPeers.length > 0 && otherPeers[0].dataChannel !== null) {
+      otherPeers?.map(item => {
+        const handleDataChannel = (dataChannel) => {
+          // const dataChannel = item.dataChannel
+          dataChannel.onmessage = (event) => {
+            dispatch(addPoint({
+              data: JSON.parse(event.data)
+            }))
+            draw(JSON.parse(event.data))
+          };
+        }
+        handleDataChannel(item.dataChannel)
+        item.peerConnection.ondatachannel = handleDataChannel;
+      })
+
+    }
   })
   
   let countChange = useRef(0)
