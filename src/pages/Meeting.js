@@ -373,37 +373,14 @@ function Meeting() {
     // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
-      // otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
-      //   // ordered: false, // do not guarantee order
-      //   // maxPacketLifeTime: 3000, // in milliseconds
-      //   maxPacketLifeTime: 25000,
-      //   negotiated: true, 
-      //   ordered: true,
-      //   id: 1
-      // })
-      // // paint
-      // const dataChannel = otherPeers.current[index].dataChannel
-      
-      // dataChannel.onerror = (error) => {
-      //   console.log("Data Channel Error:", error);
-      // };
-      
-      // dataChannel.onmessage = (event) => {
-      //   // let arr = otherPeerDrawData
-      //   // arr.push(
-      //   //   JSON.parse(event.data)
-      //   // )
-      //   // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
-      //   // console.log("Got Data Channel Message:", event.data);
-      // };
-      
-      // dataChannel.onopen = () => {
-      //   // dataChannel.send("Hello World!");
-      // };
-      
-      // dataChannel.onclose = () => {
-      //   // console.log("The Data Channel is Closed");
-      // };
+      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+        // ordered: false, // do not guarantee order
+        // maxPacketLifeTime: 3000, // in milliseconds
+        maxPacketLifeTime: 25000,
+        negotiated: true, 
+        ordered: true,
+        id: 1
+      })
 
       // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
@@ -831,7 +808,10 @@ function Meeting() {
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
-      {/* <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/> */}
+      {
+        visibleWhiteboard &&
+        <Whiteboard visible={true} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      }
       
       <div
         id="parentLayout"
