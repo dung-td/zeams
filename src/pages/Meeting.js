@@ -913,9 +913,9 @@ function Meeting() {
             <div
               id="localStreamRefDiv"
               className="h-full p-2 "
-              onClick={() => {
-                setFocus(localStreamRef.current.srcObject, "You", "localStream")
-              }}
+              // onClick={() => {
+              //   setFocus(localStreamRef.current.srcObject, "You", "localStream")
+              // }}
             >
               <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                 <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
