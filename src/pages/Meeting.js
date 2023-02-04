@@ -89,8 +89,6 @@ function Meeting() {
   const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
 
-  console.log('++', peers)
-
   const deepClonePeers = () => {
     // dispatch(
     //   updateOtherPeers({
@@ -105,7 +103,7 @@ function Meeting() {
     for (let i = 0; i < otherPeers.current.length; i++) {
       const peer = otherPeers.current[i]
 
-      if (peer.id === msg.sender.id) {
+      if (peer.id == msg.sender.id) {
         result = i
         break
       }
@@ -117,14 +115,14 @@ function Meeting() {
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
       // localStreamRef.current.srcObject = stream
-      if (stream !== null && localStreamRef.current) {
+      if (stream != null && localStreamRef.current) {
         localStreamRef.current.srcObject = stream
       }
     })
   }
 
   const handleCleanUpConnection = (which) => {
-    if (which === "all") {
+    if (which == "all") {
       if (otherPeers.current.length > 0) {
         otherPeers.current?.forEach((item) => {
           item.peerConnection?.removeEventListener("track", () => null)
@@ -212,7 +210,7 @@ function Meeting() {
           name: userName,
         },
       },
-      create: action === "in" ? false : true,
+      create: action == "in" ? false : true,
     })
 
     connection.on("message", async (msg) => {
@@ -222,12 +220,12 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver !== null && obj.data.receiver === userId) {
+          if (obj.data.receiver != null && obj.data.receiver == userId) {
             setDocRef(obj.data.docRef)
             let arr = []
             obj.data.participants.forEach((person) => {
               console.log(obj.data)
-              if (person.id !== userId) {
+              if (person.id != userId) {
                 arr.push({
                   id: person.id,
                   name: person.name,
@@ -252,7 +250,7 @@ function Meeting() {
           break
         case "offer":
           try {
-            if (obj.receiver === userId) {
+            if (obj.receiver == userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
@@ -270,11 +268,11 @@ function Meeting() {
               }
 
               if (
-                obj.data !==
+                obj.data !=
                 otherPeers.current[index].peerConnection?.localDescription
               ) {
                 if (
-                  otherPeers.current[index].peerConnection.signalingState !==
+                  otherPeers.current[index].peerConnection.signalingState !=
                   "stable"
                 ) {
                   await Promise.all([
@@ -314,7 +312,7 @@ function Meeting() {
           } catch (e) {}
           break
         case "answer":
-          if (obj.receiver === userId) {
+          if (obj.receiver == userId) {
             const check = findOfferIndex(obj)
 
             if (check < 0) {
@@ -336,8 +334,8 @@ function Meeting() {
             const check = findOfferIndex(obj)
 
             if (
-              obj.receiver === userId &&
-              obj.sender.id === otherPeers.current[check].id
+              obj.receiver == userId &&
+              obj.sender.id == otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
@@ -417,7 +415,7 @@ function Meeting() {
 
         // replace old tracks in other peers with latest tracks
         otherPeers.current.forEach((peer, idx) => {
-          if (idx !== index && peer.peerConnection) {
+          if (idx != index && peer.peerConnection) {
             console.log("REPLACE TRACK")
             peer.peerConnection.getSenders().forEach((sender) => {
               sender.replaceTrack(
@@ -464,7 +462,7 @@ function Meeting() {
 
           let videoId = "remoteStream" + otherPeers.current[index].id
 
-          if (otherPeers.current[index].remoteStream === undefined) {
+          if (otherPeers.current[index].remoteStream == undefined) {
             addRemoteStreamToView(videoId)
             otherPeers.current[index].remoteStream = new MediaStream()
           }
@@ -782,7 +780,7 @@ function Meeting() {
   useEffect(() => {
     console.log("Get new stream")
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
-      if (stream !== null && localStreamRef.current) {
+      if (stream != null && localStreamRef.current) {
         localStreamRef.current.srcObject = stream
       }
 
