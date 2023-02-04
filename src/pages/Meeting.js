@@ -88,6 +88,7 @@ function Meeting() {
   const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
 
+  const [render, setRender] = useState(0)
   console.log('++', peers)
 
   const deepClonePeers = () => {
@@ -367,37 +368,30 @@ function Meeting() {
     // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
-      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
-        // ordered: false, // do not guarantee order
-        // maxPacketLifeTime: 3000, // in milliseconds
-        maxPacketLifeTime: 25000,
-        negotiated: true, 
-        ordered: true,
-        id: 1
-      })
+      otherPeers.current[index].dataChannel = null
       // paint
-      const dataChannel = otherPeers.current[index].dataChannel
+      // const dataChannel = otherPeers.current[index].dataChannel
       
-      dataChannel.onerror = (error) => {
-        console.log("Data Channel Error:", error);
-      };
+      // dataChannel.onerror = (error) => {
+      //   console.log("Data Channel Error:", error);
+      // };
       
-      dataChannel.onmessage = (event) => {
-        // let arr = otherPeerDrawData
-        // arr.push(
-        //   JSON.parse(event.data)
-        // )
-        // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
-        // console.log("Got Data Channel Message:", event.data);
-      };
+      // dataChannel.onmessage = (event) => {
+      //   // let arr = otherPeerDrawData
+      //   // arr.push(
+      //   //   JSON.parse(event.data)
+      //   // )
+      //   // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
+      //   // console.log("Got Data Channel Message:", event.data);
+      // };
       
-      dataChannel.onopen = () => {
-        // dataChannel.send("Hello World!");
-      };
+      // dataChannel.onopen = () => {
+      //   // dataChannel.send("Hello World!");
+      // };
       
-      dataChannel.onclose = () => {
-        // console.log("The Data Channel is Closed");
-      };
+      // dataChannel.onclose = () => {
+      //   // console.log("The Data Channel is Closed");
+      // };
 
       // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
@@ -497,6 +491,13 @@ function Meeting() {
           ) {
             return
           }
+          otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+            maxPacketLifeTime: 25000,
+            negotiated: true, 
+            ordered: true,
+            id: 1
+          })
+          setRender(1 - render)
           otherPeers.current[index].peerConnection
             ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
@@ -1025,7 +1026,7 @@ function Meeting() {
           <div className="relative">
             {
               showMore && (
-                <div className="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
+                <div className="absolute z-50 cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
                   top: '-100px',
                   width: '150px'
                 }}>

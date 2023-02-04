@@ -169,18 +169,23 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
     window.onresize = changeSizeWindow
 
     // 
-    otherPeers?.map(item => {
-      const dataChannel = item.dataChannel
-      dataChannel.onmessage = (event) => {
-        // let arr = arrPoint.current
-        // arr.push(JSON.parse(event.data))
-        // arrPoint.current = arr
-        dispatch(addPoint({
-          data: JSON.parse(event.data)
-        }))
-        draw(JSON.parse(event.data))
-      };
-    })
+    if (otherPeers.length > 0) {
+      otherPeers?.map(item => {
+        const handleDataChannel = (dataChannel) => {
+          // const dataChannel = item.dataChannel
+          dataChannel.onmessage = (event) => {
+            dispatch(addPoint({
+              data: JSON.parse(event.data)
+            }))
+            draw(JSON.parse(event.data))
+          };
+        }
+        if (item.dataChannel !== null) {
+          handleDataChannel(item.dataChannel)
+          item.peerConnection.ondatachannel = handleDataChannel
+        }
+      })
+    }
   })
   
   let countChange = useRef(0)
@@ -252,6 +257,7 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
                 <div
                   style={{
                     zIndex: '999',
+                    position: 'absolute'
                   }}
                 >
                   <SketchPicker 
@@ -261,13 +267,16 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
                 </div>
               )
             }
-            <canvas 
-              ref={canvasRef}
-              onMouseMove={e => {
-                // console.log({ x: e.clientX, y: e.clientY })
-                move(e)
-              }}
-            ></canvas>
+            <div>
+              <canvas 
+                ref={canvasRef}
+                onMouseMove={e => {
+                  // console.log({ x: e.clientX, y: e.clientY })
+                  move(e)
+                }}
+              ></canvas>
+
+            </div>
           </div>
         </div>
       )
