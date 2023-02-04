@@ -578,7 +578,7 @@ function Meeting() {
       const video = document.querySelector("#" + videoId)
       video.autoplay = true
       video.srcObject = remoteStream
-      // video.play()
+      video.play()
     }, 1000)
   }
 
