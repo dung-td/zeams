@@ -373,37 +373,37 @@ function Meeting() {
     // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
-      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
-        // ordered: false, // do not guarantee order
-        // maxPacketLifeTime: 3000, // in milliseconds
-        maxPacketLifeTime: 25000,
-        negotiated: true, 
-        ordered: true,
-        id: 1
-      })
-      // paint
-      const dataChannel = otherPeers.current[index].dataChannel
+      // otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+      //   // ordered: false, // do not guarantee order
+      //   // maxPacketLifeTime: 3000, // in milliseconds
+      //   maxPacketLifeTime: 25000,
+      //   negotiated: true, 
+      //   ordered: true,
+      //   id: 1
+      // })
+      // // paint
+      // const dataChannel = otherPeers.current[index].dataChannel
       
-      dataChannel.onerror = (error) => {
-        console.log("Data Channel Error:", error);
-      };
+      // dataChannel.onerror = (error) => {
+      //   console.log("Data Channel Error:", error);
+      // };
       
-      dataChannel.onmessage = (event) => {
-        // let arr = otherPeerDrawData
-        // arr.push(
-        //   JSON.parse(event.data)
-        // )
-        // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
-        // console.log("Got Data Channel Message:", event.data);
-      };
+      // dataChannel.onmessage = (event) => {
+      //   // let arr = otherPeerDrawData
+      //   // arr.push(
+      //   //   JSON.parse(event.data)
+      //   // )
+      //   // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
+      //   // console.log("Got Data Channel Message:", event.data);
+      // };
       
-      dataChannel.onopen = () => {
-        // dataChannel.send("Hello World!");
-      };
+      // dataChannel.onopen = () => {
+      //   // dataChannel.send("Hello World!");
+      // };
       
-      dataChannel.onclose = () => {
-        // console.log("The Data Channel is Closed");
-      };
+      // dataChannel.onclose = () => {
+      //   // console.log("The Data Channel is Closed");
+      // };
 
       // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
