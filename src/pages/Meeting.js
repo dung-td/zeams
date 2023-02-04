@@ -831,7 +831,7 @@ function Meeting() {
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
-      <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      {/* <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/> */}
       
       <div
         id="parentLayout"
