@@ -4,7 +4,6 @@ let height, width
 let canvasCtx = undefined
 let backgroundImg = undefined
 let effectOption = ""
-let callbackFunction = undefined
 
 const selfieSegmentation = new SelfieSegmentation({
   locateFile: (file) => {
@@ -39,30 +38,17 @@ selfieSegmentation.onResults((results) => {
       canvasCtx.globalCompositeOperation = "destination-over"
       canvasCtx.drawImage(background, 0, 0, width, height)
       break
-    case "blur0":
-      canvasCtx.filter = "blur(0px)"
-      canvasCtx.globalCompositeOperation = "destination-over"
-      canvasCtx.drawImage(results.image, 0, 0, width, height)
-      break
-    case "blur10":
+    case "blur":
       canvasCtx.filter = "blur(10px)"
       canvasCtx.globalCompositeOperation = "destination-over"
       canvasCtx.drawImage(results.image, 0, 0, width, height)
       break
-    case "blur20":
-      canvasCtx.filter = "blur(20px)"
-      canvasCtx.globalCompositeOperation = "destination-over"
-      canvasCtx.drawImage(results.image, 0, 0, width, height)
-      break
     default:
-      canvasCtx.filter = "blur(50px)"
       canvasCtx.globalCompositeOperation = "destination-over"
       canvasCtx.drawImage(results.image, 0, 0, width, height)
       break
   }
   canvasCtx.restore()
-
-  callbackFunction()
 })
 
 async function segment(videoElement, canvasElement) {
@@ -92,9 +78,8 @@ const handlePlaying = async (videoElement, canvasElement) => {
   await getFrames()
 }
 
-export async function start(videoElement, canvasElement, option, callback) {
+export async function start(videoElement, canvasElement, option) {
   effectOption = option
-  callbackFunction = callback
   videoElement.addEventListener(
     "playing",
     handlePlaying(videoElement, canvasElement)
