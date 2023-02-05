@@ -6,7 +6,6 @@ import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
 
 import {
-  callback,
   changeSize,
   segment,
   setBackground,
@@ -559,7 +558,7 @@ function Meeting() {
       const video = document.querySelector("#" + videoId)
       video.autoplay = true
       video.srcObject = remoteStream
-      // video.play()
+      video.play()
     }, 1000)
   }
 
@@ -753,22 +752,37 @@ function Meeting() {
   }, [])
 
   useEffect(() => {
-    if (isCamOn) {
-      getNewStream()
-    }
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream != null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
   }, [isCamOn])
 
   useEffect(() => {
     if (localStreamRef.current) {
       let locaStream = localStreamRef.current.srcObject
-      locaStream?.getVideoTracks()?.forEach(track => track.enabled = !track.enabled)
+      locaStream
+        ?.getVideoTracks()
+        ?.forEach((track) => (track.enabled = !track.enabled))
     }
   }, [camEnable])
 
   useEffect(() => {
     if (localStreamRef.current) {
       let locaStream = localStreamRef.current.srcObject
-      locaStream?.getAudioTracks()?.forEach(track => track.enabled = !track.enabled)
+      locaStream
+        ?.getAudioTracks()
+        ?.forEach((track) => (track.enabled = !track.enabled))
     }
   }, [micEnable])
 
