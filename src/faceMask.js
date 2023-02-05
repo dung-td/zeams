@@ -14,6 +14,7 @@ import { drawConnectors } from "@mediapipe/drawing_utils"
 
 let height, width
 let canvasCtx = undefined
+let callbackFunction = undefined
 
 const faceMesh = new FaceMesh({
   locateFile: (file) => {
@@ -71,6 +72,8 @@ faceMesh.onResults((results) => {
     }
   }
   canvasCtx.restore()
+
+  callbackFunction()
 })
 
 async function segment(videoElement, canvasElement) {
@@ -100,7 +103,8 @@ const handlePlaying = async (videoElement, canvasElement) => {
   await getFrames()
 }
 
-export async function startMask(videoElement, canvasElement) {
+export async function startMask(videoElement, canvasElement, callback) {
+  callbackFunction = callback
   videoElement.addEventListener(
     "playing",
     handlePlaying(videoElement, canvasElement)
