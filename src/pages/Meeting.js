@@ -370,11 +370,11 @@ function Meeting() {
           const remoteImageId = "image" + obj.sender
           let imageElement = document.getElementById(remoteImageId)
           if (obj.status) {
-            imageElement.classList.add("-z-20")
             imageElement.classList.remove("z-20")
+            imageElement.classList.add("-z-20")
           } else {
-            imageElement.classList.add("z-20")
             imageElement.classList.remove("-z-20")
+            imageElement.classList.add("z-20")
           }
           break
         default:
@@ -940,32 +940,34 @@ function Meeting() {
                 <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                   You
                 </p>
-                {isCamOn ? (
-                  <>
-                    <video
-                      id="localStream"
-                      className="localStreamRef absolute w-full"
-                      ref={localStreamRef}
-                      autoPlay
-                      muted
-                    />
-                    <video
-                      id="processedLocalStream"
-                      className="processedLocalStream absolute w-full"
-                      ref={processedLocalStreamRef}
-                      autoPlay
-                      muted
-                    />
-                  </>
-                ) : (
-                  <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                <>
+                  <video
+                    id="localStream"
+                    className="localStreamRef absolute w-full"
+                    ref={localStreamRef}
+                    autoPlay
+                    muted
+                  />
+                  <video
+                    id="processedLocalStream"
+                    className="processedLocalStream absolute w-full"
+                    ref={processedLocalStreamRef}
+                    autoPlay
+                    muted
+                  />
+
+                  <div
+                    className={`${
+                      camEnable ? "-z-20" : "z-20"
+                    } absolute w-full h-full flex justify-center items-center bg-[#242736] -z-20`}
+                  >
                     <div className="text-white bg-[#242736]/70 p-20 rounded-md">
                       <span className="material-icons text-5xl">
                         perm_identity
                       </span>
                     </div>
                   </div>
-                )}
+                </>
               </div>
             </div>
 
@@ -988,7 +990,7 @@ function Meeting() {
                     </p>
                     <div
                       id={`image${otherPeers.current[index].id}`}
-                      className="absolute w-full h-full flex justify-center items-center bg-[#242736] -z-10"
+                      className="absolute w-full h-full flex justify-center items-center bg-[#242736] -z-20"
                     >
                       <div className="text-white bg-[#242736]/70 p-20 rounded-md">
                         <span className="material-icons text-5xl">
@@ -996,7 +998,6 @@ function Meeting() {
                         </span>
                       </div>
                     </div>
-                    f
                   </div>
                 </div>
               )
@@ -1063,6 +1064,8 @@ function Meeting() {
                 roomRef: docRef,
                 sender: userId,
               })
+
+              navigate(`/`)
             }}
           >
             <p className="text-white">Leave Meeting</p>

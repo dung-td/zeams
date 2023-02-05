@@ -130,7 +130,7 @@ function CreatRoom() {
             muted
           ></video>
         ) : (
-          <div className="h-[720px] w-[1280px] rounded-xl flex justify-center items-center bg-[#242736]">
+          <div className="w-full h-full rounded-xl flex justify-center items-center bg-[#242736]">
             <div className="text-white bg-[#242736]/70 p-20 rounded-md">
               <span className="material-icons text-5xl">perm_identity</span>
             </div>
