@@ -43,6 +43,7 @@ import {
 import Whiteboard from "../components/Whiteboard.js"
 import { setPoints } from "../redux/slices/DrawSlice.js"
 import { changeSizeMask, startMask } from "../faceMask.js"
+import { updateMessages } from "../redux/slices/ChatSlice.js"
 
 const isVoiceOnly = false
 
@@ -61,8 +62,8 @@ function Meeting() {
   const processedLocalStreamRefCache = useRef()
   const remoteStreamRef = useRef()
   const otherPeers = useRef([])
-  let userId = useSelector(selectUserId)
-  let userName = useSelector(selectUsername)
+  const userId = useSelector(selectUserId)
+  const userName = useSelector(selectUsername)
   const [others, setOthers] = useState([])
   const [docRef, setDocRef] = useState("")
 
@@ -87,9 +88,7 @@ function Meeting() {
 
   const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
-
   const [render, setRender] = useState(0)
-  console.log('++', peers)
 
   const deepClonePeers = () => {
     // dispatch(
@@ -105,7 +104,7 @@ function Meeting() {
     for (let i = 0; i < otherPeers.current.length; i++) {
       const peer = otherPeers.current[i]
 
-      if (peer.id === msg.sender.id) {
+      if (peer.id == msg.sender.id) {
         result = i
         break
       }
@@ -117,14 +116,14 @@ function Meeting() {
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
       // dispatch(updateLocalStream({ localStream: stream }))
       // localStreamRef.current.srcObject = stream
-      if (stream !== null && localStreamRef.current) {
+      if (stream != null && localStreamRef.current) {
         localStreamRef.current.srcObject = stream
       }
     })
   }
 
   const handleCleanUpConnection = (which) => {
-    if (which === "all") {
+    if (which == "all") {
       if (otherPeers.current.length > 0) {
         otherPeers.current?.forEach((item) => {
           item.peerConnection?.removeEventListener("track", () => null)
@@ -212,7 +211,7 @@ function Meeting() {
           name: userName,
         },
       },
-      create: action === "in" ? false : true,
+      create: action == "in" ? false : true,
     })
 
     connection.on("message", async (msg) => {
@@ -222,12 +221,12 @@ function Meeting() {
         case "id":
           break
         case "join":
-          if (obj.data.receiver !== null && obj.data.receiver === userId) {
+          if (obj.data.receiver != null && obj.data.receiver == userId) {
             setDocRef(obj.data.docRef)
             let arr = []
             obj.data.participants.forEach((person) => {
               console.log(obj.data)
-              if (person.id !== userId) {
+              if (person.id != userId) {
                 arr.push({
                   id: person.id,
                   name: person.name,
@@ -240,12 +239,19 @@ function Meeting() {
             dispatch(setPoints({
               data: obj.data.points
             }))
+            
+            dispatch(
+              updateMessages({
+                messages: obj.data?.chats
+              })
+            )
+
             setInitialising(false)
           }
           break
         case "offer":
           try {
-            if (obj.receiver === userId) {
+            if (obj.receiver == userId) {
               const check = findOfferIndex(obj)
 
               if (check < 0) {
@@ -263,11 +269,11 @@ function Meeting() {
               }
 
               if (
-                obj.data !==
+                obj.data !=
                 otherPeers.current[index].peerConnection?.localDescription
               ) {
                 if (
-                  otherPeers.current[index].peerConnection.signalingState !==
+                  otherPeers.current[index].peerConnection.signalingState !=
                   "stable"
                 ) {
                   await Promise.all([
@@ -307,7 +313,7 @@ function Meeting() {
           } catch (e) {}
           break
         case "answer":
-          if (obj.receiver === userId) {
+          if (obj.receiver == userId) {
             const check = findOfferIndex(obj)
 
             if (check < 0) {
@@ -329,8 +335,8 @@ function Meeting() {
             const check = findOfferIndex(obj)
 
             if (
-              obj.receiver === userId &&
-              obj.sender.id === otherPeers.current[check].id
+              obj.receiver == userId &&
+              obj.sender.id == otherPeers.current[check].id
             ) {
               if (check < 0) {
                 otherPeers.current.push({
@@ -369,29 +375,6 @@ function Meeting() {
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
       otherPeers.current[index].dataChannel = null
-      // paint
-      // const dataChannel = otherPeers.current[index].dataChannel
-      
-      // dataChannel.onerror = (error) => {
-      //   console.log("Data Channel Error:", error);
-      // };
-      
-      // dataChannel.onmessage = (event) => {
-      //   // let arr = otherPeerDrawData
-      //   // arr.push(
-      //   //   JSON.parse(event.data)
-      //   // )
-      //   // setOtherPeerDrawData(prev => [...prev, JSON.parse(event.data)])
-      //   // console.log("Got Data Channel Message:", event.data);
-      // };
-      
-      // dataChannel.onopen = () => {
-      //   // dataChannel.send("Hello World!");
-      // };
-      
-      // dataChannel.onclose = () => {
-      //   // console.log("The Data Channel is Closed");
-      // };
 
       // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
@@ -403,7 +386,7 @@ function Meeting() {
 
         // replace old tracks in other peers with latest tracks
         otherPeers.current.forEach((peer, idx) => {
-          if (idx !== index && peer.peerConnection) {
+          if (idx != index && peer.peerConnection) {
             console.log("REPLACE TRACK")
             peer.peerConnection.getSenders().forEach((sender) => {
               sender.replaceTrack(
@@ -450,7 +433,7 @@ function Meeting() {
 
           let videoId = "remoteStream" + otherPeers.current[index].id
 
-          if (otherPeers.current[index].remoteStream === undefined) {
+          if (otherPeers.current[index].remoteStream == undefined) {
             addRemoteStreamToView(videoId)
             otherPeers.current[index].remoteStream = new MediaStream()
           }
@@ -498,6 +481,7 @@ function Meeting() {
             id: 1
           })
           setRender(1 - render)
+          
           otherPeers.current[index].peerConnection
             ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
@@ -571,7 +555,7 @@ function Meeting() {
       const video = document.querySelector("#" + videoId)
       video.autoplay = true
       video.srcObject = remoteStream
-      // video.play()
+      video.play()
     }, 1000)
   }
 
@@ -589,7 +573,14 @@ function Meeting() {
   const renderSidebar = (param) => {
     switch (param) {
       case "chat":
-        return <Chat />
+        return (
+          <Chat
+            roomId={roomId}
+            userName={userName}
+            connection={connection}
+            otherPeers={otherPeers.current}
+          />
+        )
       case "attend":
         return <Attend otherPeers={otherPeers.current} local={userId} />
       default:
@@ -768,7 +759,7 @@ function Meeting() {
   useEffect(() => {
     console.log("Get new stream")
     navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
-      if (stream !== null && localStreamRef.current) {
+      if (stream != null && localStreamRef.current) {
         localStreamRef.current.srcObject = stream
       }
 
@@ -819,7 +810,11 @@ function Meeting() {
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
       {/* <Whiteboard setOtherPeerDrawData={(data) => setOtherPeerDrawData(prev => [...prev, ...data]) } visible={visibleWhiteboard} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} data={otherPeerDrawData}/> */}
-      <Whiteboard visible={visibleWhiteboard} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      {
+        visibleWhiteboard &&
+        <Whiteboard visible={true} roomId={roomId} setVisible={() => setVisibleWhiteboard(!visibleWhiteboard)} otherPeers={otherPeerRealtime} connection={connection}/>
+      }
+      
       <div
         id="parentLayout"
         className="relative w-full flex flex-row min-h-screen max-h-screen p-4 pb-16 justify-center"
@@ -898,9 +893,9 @@ function Meeting() {
             <div
               id="localStreamRefDiv"
               className="h-full p-2 "
-              onClick={() => {
-                setFocus(localStreamRef.current.srcObject, "You", "localStream")
-              }}
+              // onClick={() => {
+              //   setFocus(localStreamRef.current.srcObject, "You", "localStream")
+              // }}
             >
               <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                 <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">

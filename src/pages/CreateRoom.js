@@ -109,7 +109,7 @@ function CreatRoom() {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative w-4/12">
         <div className="absolute z-30 bottom-2 left-2 flex flex-row">
           {displayName !== "" ? (
             <p className=" text-white bg-[#242B2E] px-6 py-2 rounded-md">
