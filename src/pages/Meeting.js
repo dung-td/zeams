@@ -358,9 +358,24 @@ function Meeting() {
           } catch (err) {}
           break
         case "hang-up":
-          const index = findOfferIndex(obj)
-          removeRemoteStreamFromView(index)
-          handleCleanUpConnection(index)
+          if (obj.sender == userId) {
+            window.location.href = `/`
+          } else {
+            const index = findOfferIndex(obj)
+            removeRemoteStreamFromView(index)
+            handleCleanUpConnection(index)
+          }
+          break
+        case "camStatus":
+          const remoteImageId = "image" + obj.sender
+          let imageElement = document.getElementById(remoteImageId)
+          if (obj.status) {
+            imageElement.classList.remove("z-20")
+            imageElement.classList.add("-z-20")
+          } else {
+            imageElement.classList.remove("-z-20")
+            imageElement.classList.add("z-20")
+          }
           break
         default:
           console.log("Unknown received message: " + obj.type)
@@ -703,7 +718,7 @@ function Meeting() {
       })
   }
 
-  const setFocus = (stream, name, elementId) => {
+  const setFocus = (stream, name) => {
     let streamElements = document.querySelectorAll(".remoteStream")
     console.log("Elements: " + streamElements)
     streamElements?.forEach((element) => {
@@ -793,6 +808,13 @@ function Meeting() {
       locaStream
         ?.getVideoTracks()
         ?.forEach((track) => (track.enabled = !track.enabled))
+      sendToServer({
+        type: "camStatus",
+        status: camEnable,
+        roomId: roomId,
+        roomRef: docRef,
+        sender: userId,
+      })
     }
   }, [camEnable])
 
@@ -818,7 +840,6 @@ function Meeting() {
     }
     setOtherPeerRealtime(otherPeers.current)
   }, [otherPeers.current])
-  console.log("sss", otherPeers.current)
 
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
@@ -912,39 +933,41 @@ function Meeting() {
               id="localStreamRefDiv"
               className="h-full p-2 "
               onClick={() => {
-                setFocus(localStreamRef.current.srcObject, "You", "localStream")
+                setFocus(localStreamRef.current.srcObject, "You")
               }}
             >
               <div className="relative h-full bg-gray-700 border border-gray-600 rounded-md flex flex-col justify-center items-center object-cover overflow-hidden">
                 <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                   You
                 </p>
-                {isCamOn ? (
-                  <>
-                    <video
-                      id="localStream"
-                      className="localStreamRef absolute w-full"
-                      ref={localStreamRef}
-                      autoPlay
-                      muted
-                    />
-                    <video
-                      id="processedLocalStream"
-                      className="processedLocalStream absolute w-full"
-                      ref={processedLocalStreamRef}
-                      autoPlay
-                      muted
-                    />
-                  </>
-                ) : (
-                  <div className="w-full h-full flex justify-center items-center bg-[#242736]">
+                <>
+                  <video
+                    id="localStream"
+                    className="localStreamRef absolute w-full"
+                    ref={localStreamRef}
+                    autoPlay
+                    muted
+                  />
+                  <video
+                    id="processedLocalStream"
+                    className="processedLocalStream absolute w-full"
+                    ref={processedLocalStreamRef}
+                    autoPlay
+                    muted
+                  />
+
+                  <div
+                    className={`${
+                      camEnable ? "-z-20" : "z-20"
+                    } absolute w-full h-full flex justify-center items-center bg-[#242736]`}
+                  >
                     <div className="text-white bg-[#242736]/70 p-20 rounded-md">
                       <span className="material-icons text-5xl">
                         perm_identity
                       </span>
                     </div>
                   </div>
-                )}
+                </>
               </div>
             </div>
 
@@ -956,8 +979,7 @@ function Meeting() {
                   onClick={() => {
                     setFocus(
                       otherPeers.current[index].remoteStream,
-                      otherPeers.current[index].name,
-                      "remoteStream" + otherPeers.current[index].id
+                      otherPeers.current[index].name
                     )
                   }}
                 >
@@ -966,6 +988,16 @@ function Meeting() {
                     <p className="absolute z-30 bottom-2 left-2 text-white bg-[#242B2E] px-6 py-2 rounded-md">
                       {otherPeers.current[index].name}
                     </p>
+                    <div
+                      id={`image${otherPeers.current[index].id}`}
+                      className="absolute w-full h-full flex justify-center items-center bg-[#242736] -z-20"
+                    >
+                      <div className="text-white bg-[#242736]/70 p-20 rounded-md">
+                        <span className="material-icons text-5xl">
+                          perm_identity
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )
