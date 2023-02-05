@@ -798,7 +798,7 @@ function Meeting() {
       otherPeers.current.forEach((peer) => {
         console.log("REPLACE TRACK")
         peer.peerConnection.getSenders().forEach((sender) => {
-          sender.replaceTrack(stream.getTracks()[0])
+          sender.replaceTrack(stream.getVideoTracks()[0])
         })
       })
     })
