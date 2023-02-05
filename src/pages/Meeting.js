@@ -88,6 +88,7 @@ function Meeting() {
 
   const [visibleWhiteboard, setVisibleWhiteboard] = useState(false)
   const [otherPeerDrawData, setOtherPeerDrawData] = useState([])
+  const [render, setRender] = useState(0)
 
   const deepClonePeers = () => {
     // dispatch(
@@ -373,14 +374,7 @@ function Meeting() {
     // console.log("peer", otherPeers.current[index])
     if (!otherPeers.current[index].peerConnection) {
       otherPeers.current[index].peerConnection = new RTCPeerConnection(SERVERS)
-      otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
-        // ordered: false, // do not guarantee order
-        // maxPacketLifeTime: 3000, // in milliseconds
-        maxPacketLifeTime: 25000,
-        negotiated: true, 
-        ordered: true,
-        id: 1
-      })
+      otherPeers.current[index].dataChannel = null
 
       // Media
       navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
@@ -480,6 +474,14 @@ function Meeting() {
           ) {
             return
           }
+          otherPeers.current[index].dataChannel = otherPeers.current[index].peerConnection.createDataChannel("jeams", {
+            maxPacketLifeTime: 25000,
+            negotiated: true, 
+            ordered: true,
+            id: 1
+          })
+          setRender(1 - render)
+
           otherPeers.current[index].peerConnection
             ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
@@ -1019,7 +1021,7 @@ function Meeting() {
           <div className="relative">
             {
               showMore && (
-                <div className="absolute cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
+                <div className="absolute z-50 cursor-pointer border-solid border-2 border-indigo-600 rounded-md bg-white" style={{
                   top: '-100px',
                   width: '150px'
                 }}>
