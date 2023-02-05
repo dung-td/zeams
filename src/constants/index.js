@@ -8,28 +8,28 @@ export { SERVER_URL }
 
 export const SERVERS = {
   iceServers: [
-    // {
-    //   urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
-    // },
+    {
+      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+    },
 
-    {
-      urls: "stun:relay.metered.ca:80",
-    },
-    {
-      urls: "turn:relay.metered.ca:80",
-      username: "b8f171cabc2c8f9531a81161",
-      credential: "urxIV1zF2kAAMOSQ",
-    },
-    {
-      urls: "turn:relay.metered.ca:443",
-      username: "b8f171cabc2c8f9531a81161",
-      credential: "urxIV1zF2kAAMOSQ",
-    },
-    {
-      urls: "turn:relay.metered.ca:443?transport=tcp",
-      username: "b8f171cabc2c8f9531a81161",
-      credential: "urxIV1zF2kAAMOSQ",
-    },
+    // {
+    //   urls: "stun:relay.metered.ca:80",
+    // },
+    // {
+    //   urls: "turn:relay.metered.ca:80",
+    //   username: "b8f171cabc2c8f9531a81161",
+    //   credential: "urxIV1zF2kAAMOSQ",
+    // },
+    // {
+    //   urls: "turn:relay.metered.ca:443",
+    //   username: "b8f171cabc2c8f9531a81161",
+    //   credential: "urxIV1zF2kAAMOSQ",
+    // },
+    // {
+    //   urls: "turn:relay.metered.ca:443?transport=tcp",
+    //   username: "b8f171cabc2c8f9531a81161",
+    //   credential: "urxIV1zF2kAAMOSQ",
+    // },
   ],
 
   iceCandidatePoolSize: 10,
