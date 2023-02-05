@@ -1,35 +1,32 @@
 import { selectAudio, selectVideo } from "../redux/slices/ConnectionSlice"
 
 const SERVER_URL = `https://zeams-app.herokuapp.com/` //'http://10.10.10.190:3001'
-// const SERVER_URL = `http://localhost:3001/` //'http://10.10.10.190:3001'
-// const SERVER_URL = "http://192.168.107.28:3001"
 
 export { SERVER_URL }
 
 export const SERVERS = {
   iceServers: [
+    // {
+    //   urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+    // },
     {
-      urls: ["stun:stun1.l.google.com:19302", "stun:stun2.l.google.com:19302"],
+      urls: "stun:relay.metered.ca:80",
     },
-
-    // {
-    //   urls: "stun:relay.metered.ca:80",
-    // },
-    // {
-    //   urls: "turn:relay.metered.ca:80",
-    //   username: "b8f171cabc2c8f9531a81161",
-    //   credential: "urxIV1zF2kAAMOSQ",
-    // },
-    // {
-    //   urls: "turn:relay.metered.ca:443",
-    //   username: "b8f171cabc2c8f9531a81161",
-    //   credential: "urxIV1zF2kAAMOSQ",
-    // },
-    // {
-    //   urls: "turn:relay.metered.ca:443?transport=tcp",
-    //   username: "b8f171cabc2c8f9531a81161",
-    //   credential: "urxIV1zF2kAAMOSQ",
-    // },
+    {
+      urls: "turn:relay.metered.ca:80",
+      username: "b7c8e882b6a18fac9c355430",
+      credential: "gxKFYWnICH7BX7cM",
+    },
+    {
+      urls: "turn:relay.metered.ca:443",
+      username: "b7c8e882b6a18fac9c355430",
+      credential: "gxKFYWnICH7BX7cM",
+    },
+    {
+      urls: "turn:relay.metered.ca:443?transport=tcp",
+      username: "b7c8e882b6a18fac9c355430",
+      credential: "gxKFYWnICH7BX7cM",
+    },
   ],
 
   iceCandidatePoolSize: 10,
