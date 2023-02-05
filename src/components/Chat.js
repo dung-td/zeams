@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react"
+import React, { useEffect, useLayoutEffect, useRef } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { addMessage, selectMessages } from "../redux/slices/ChatSlice"
 
@@ -58,20 +58,30 @@ export const Chat = ({ roomId, userName, otherPeers, connection }) => {
   }
 
   useLayoutEffect(() => {
-    otherPeers?.forEach((peer) => {
-      const dataChannel = peer.dataChannel
-      dataChannel.onmessage = (event) => {
-        const data = JSON.parse(event.data)
+    if (otherPeers.length > 0) {
+      setInterval(() => {
+        otherPeers?.map(item => {
+          const handleDataChannel = (dataChannel) => {
+            // const dataChannel = item.dataChannel
+            dataChannel.onmessage = (event) => {
+              const data = JSON.parse(event.data)
 
-        if (data.time) {
-          dispatch(
-            addMessage({
-              newMessage: data
-            })
-          )
-        }
-      }
-    })
+              if (data.time) {
+                dispatch(
+                  addMessage({
+                    newMessage: data
+                  })
+                )
+              }
+            };
+          }
+          if (item.dataChannel !== null) {
+            handleDataChannel(item.dataChannel)
+            item.peerConnection.ondatachannel = handleDataChannel
+          }
+        })
+      }, [100])
+    }
   })
 
   useEffect(() => {
