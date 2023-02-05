@@ -753,12 +753,6 @@ function Meeting() {
   }, [])
 
   useEffect(() => {
-    if (isCamOn) {
-      getNewStream()
-    }
-  }, [isCamOn])
-
-  useEffect(() => {
     if (localStreamRef.current) {
       let locaStream = localStreamRef.current.srcObject
       locaStream?.getVideoTracks()?.forEach(track => track.enabled = !track.enabled)
