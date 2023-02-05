@@ -772,7 +772,10 @@ function Meeting() {
     //     track.enabled = !track.enabled
     //   })
     // }
-  }, [isMicOn])
+    if (isCamOn) {
+      getNewStream()
+    }
+  }, [isCamOn])
 
   // Handle create peerConnection for other peers
   const [otherPeerRealtime, setOtherPeerRealtime] = useState([])
