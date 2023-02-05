@@ -753,6 +753,12 @@ function Meeting() {
   }, [])
 
   useEffect(() => {
+    if (isCamOn) {
+      getNewStream()
+    }
+  }, [isCamOn])
+
+  useEffect(() => {
     if (localStreamRef.current) {
       let locaStream = localStreamRef.current.srcObject
       locaStream?.getVideoTracks()?.forEach(track => track.enabled = !track.enabled)
@@ -765,17 +771,6 @@ function Meeting() {
       locaStream?.getAudioTracks()?.forEach(track => track.enabled = !track.enabled)
     }
   }, [micEnable])
-
-  useEffect(() => {
-    // if (localStreamRef.current) {
-    //   localStreamRef.current.getAudioTrack().forEach((track) => {
-    //     track.enabled = !track.enabled
-    //   })
-    // }
-    if (isCamOn) {
-      getNewStream()
-    }
-  }, [isCamOn])
 
   // Handle create peerConnection for other peers
   const [otherPeerRealtime, setOtherPeerRealtime] = useState([])
