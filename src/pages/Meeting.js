@@ -959,7 +959,7 @@ function Meeting() {
                   <div
                     className={`${
                       camEnable ? "-z-20" : "z-20"
-                    } absolute w-full h-full flex justify-center items-center bg-[#242736] -z-20`}
+                    } absolute w-full h-full flex justify-center items-center bg-[#242736]`}
                   >
                     <div className="text-white bg-[#242736]/70 p-20 rounded-md">
                       <span className="material-icons text-5xl">
