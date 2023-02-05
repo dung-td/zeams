@@ -6,6 +6,7 @@ import parse from "html-react-parser"
 import { PackedGrid } from "react-packed-grid"
 
 import {
+  callback,
   changeSize,
   segment,
   setBackground,
@@ -592,16 +593,19 @@ function Meeting() {
   const applyEffect = async (option, backgroundImage) => {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
+    setIsLoading(true)
+
     if (option === "") {
       removeBackground(videoElement, canvasElement)
+      setIsLoading(false)
     } else {
       if (option === "background") {
         setBackground(backgroundImage)
       }
 
-      await start(videoElement, canvasElement, option).catch((err) =>
-        console.error(err)
-      )
+      await start(videoElement, canvasElement, option, () => {
+        setIsLoading(false)
+      }).catch((err) => console.error(err))
 
       changeSize(videoElement.offsetHeight, videoElement.offsetWidth)
 
@@ -647,16 +651,11 @@ function Meeting() {
   const applyMask = async () => {
     const videoElement = document.getElementsByClassName("localStreamRef")[0]
     const canvasElement = document.getElementById("canvasTesting")
-    // if (option === "") {
-    //   removeBackground(videoElement, canvasElement)
-    // } else {
-    //   if (option === "background") {
-    //     setBackground(backgroundImage)
-    //   }
+    setIsLoading(true)
 
-    await startMask(videoElement, canvasElement).catch((err) =>
-      console.error(err)
-    )
+    await startMask(videoElement, canvasElement, () => {
+      setIsLoading(false)
+    }).catch((err) => console.error(err))
 
     changeSizeMask(videoElement.offsetHeight, videoElement.offsetWidth)
 
@@ -1131,7 +1130,7 @@ function Meeting() {
       {isLoading ? (
         <div
           id="loadingIcon"
-          class="text-center absolute top-0 w-full h-full z-20 bg-slate-400/40"
+          class="text-center absolute top-0 w-full h-full z-50 bg-slate-400/40"
         >
           <div className="h-full flex flex-col items-center justify-center">
             <svg
