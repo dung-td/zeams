@@ -248,6 +248,8 @@ function Meeting() {
                 messages: obj.data?.chats,
               })
             )
+
+            setInitialising(false)
           }
           break
         case "offer":
@@ -741,6 +743,23 @@ function Meeting() {
     }, 1000)
   }
 
+  const getNewStream = () => {
+    console.log("Get new stream")
+    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
+      if (stream != null && localStreamRef.current) {
+        localStreamRef.current.srcObject = stream
+      }
+
+      // replace old tracks in other peers with latest tracks
+      otherPeers.current.forEach((peer) => {
+        console.log("REPLACE TRACK")
+        peer.peerConnection.getSenders().forEach((sender) => {
+          sender.replaceTrack(stream.getVideoTracks()[0])
+        })
+      })
+    })
+  }
+
   // initialize socket-io connection
   useEffect(() => {
     preLoadLocalStream()
@@ -786,23 +805,6 @@ function Meeting() {
     setOtherPeerRealtime(otherPeers.current)
   }, [otherPeers.current])
   console.log("sss", otherPeers.current)
-
-  const getNewStream = () => {
-    console.log("Get new stream")
-    navigator.mediaDevices.getUserMedia(MEDIA_CONSTRAINTS).then((stream) => {
-      if (stream != null && localStreamRef.current) {
-        localStreamRef.current.srcObject = stream
-      }
-
-      // replace old tracks in other peers with latest tracks
-      otherPeers.current.forEach((peer) => {
-        console.log("REPLACE TRACK")
-        peer.peerConnection.getSenders().forEach((sender) => {
-          sender.replaceTrack(stream.getVideoTracks()[0])
-        })
-      })
-    })
-  }
 
   return (
     <div className="relative min-h-screen max-h-screen w-full bg-[#1c1f2e]">
