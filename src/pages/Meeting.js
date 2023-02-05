@@ -77,6 +77,8 @@ function Meeting() {
   const [initialising, setInitialising] = useState(true)
   const [camAmount, setCamAmount] = useState()
   const localStream = useSelector(selectLocalStream)
+  const [camEnable, setCamEnable] = useState(true)
+  const [micEnable, setMicEnable] = useState(true)
 
   const updateLayoutRef = useRef()
   const [aspectRatio, setAspectRatio] = useState(1)
@@ -757,6 +759,20 @@ function Meeting() {
   }, [isCamOn])
 
   useEffect(() => {
+    if (localStreamRef.current) {
+      let locaStream = localStreamRef.current.srcObject
+      locaStream?.getVideoTracks()?.forEach(track => track.enabled = !track.enabled)
+    }
+  }, [camEnable])
+
+  useEffect(() => {
+    if (localStreamRef.current) {
+      let locaStream = localStreamRef.current.srcObject
+      locaStream?.getAudioTracks()?.forEach(track => track.enabled = !track.enabled)
+    }
+  }, [micEnable])
+
+  useEffect(() => {
     // if (localStreamRef.current) {
     //   localStreamRef.current.getAudioTrack().forEach((track) => {
     //     track.enabled = !track.enabled
@@ -969,14 +985,15 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                dispatch(
-                  updateAudio({
-                    audio: !isMicOn,
-                  })
-                )
+                // dispatch(
+                //   updateAudio({
+                //     audio: !isMicOn,
+                //   })
+                // )
+                setMicEnable(!micEnable)
               }}
             >
-              {isMicOn ? "mic" : "mic_off"}
+              {micEnable ? "mic" : "mic_off"}
             </span>
             {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
@@ -984,14 +1001,15 @@ function Meeting() {
             <span
               className="material-icons text-white"
               onClick={() => {
-                dispatch(
-                  updateVideo({
-                    video: !isCamOn,
-                  })
-                )
+                // dispatch(
+                //   updateVideo({
+                //     video: !isCamOn,
+                //   })
+                // )
+                setCamEnable(!camEnable)
               }}
             >
-              {isCamOn ? "videocam" : "videocam_off"}
+              {camEnable ? "videocam" : "videocam_off"}
             </span>
             {/* <span className="material-icons text-white">expand_less</span> */}
           </div>
