@@ -500,7 +500,7 @@ function Meeting() {
             id: 1,
           })
           setRender(1 - render)
-          
+
           otherPeers.current[index].peerConnection
             ?.createOffer(SESSION_CONSTRAINTS)
             .then((offerDescription) => {
@@ -771,6 +771,8 @@ function Meeting() {
           sender.replaceTrack(stream.getVideoTracks()[0])
         })
       })
+
+      setCamEnable(true)
     })
   }
 
