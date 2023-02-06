@@ -168,8 +168,8 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
     window.onresize = changeSizeWindow
 
     // 
-    if (otherPeers.length > 0) {
-      setInterval(() => {
+    setInterval(() => {
+      if (otherPeers.length > 0) {
         otherPeers?.map(item => {
           const handleDataChannel = (dataChannel) => {
             // const dataChannel = item.dataChannel
@@ -185,8 +185,8 @@ const Whiteboard = ({visible, roomId, setVisible, otherPeers, connection}) => {
             item.peerConnection.ondatachannel = handleDataChannel
           }
         })
+      }
       }, [300])
-    }
   })
   
   let countChange = useRef(0)
